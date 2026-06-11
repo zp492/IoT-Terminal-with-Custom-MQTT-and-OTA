@@ -1,0 +1,20 @@
+# === 编译输出目录 ===
+Output/
+
+# === Keil MDK 本地配置 ===
+*.uvguix*
+*.uvoptx
+
+# === 调试与日志 ===
+DebugConfig/
+JLinkLog.txt
+
+# === IDE 本地配置 ===
+.vscode/
+.idea/
+
+# === 临时与备份文件 ===
+*.swp
+*.tmp
+*~
+*.bak
