@@ -222,7 +222,7 @@ Section Cross References
     stm32f1xx_hal_spi.o(i.HAL_SPI_IRQHandler) refers to stm32f1xx_hal_dma.o(i.HAL_DMA_Abort_IT) for HAL_DMA_Abort_IT
     stm32f1xx_hal_spi.o(i.HAL_SPI_IRQHandler) refers to stm32f1xx_hal_spi.o(i.HAL_SPI_ErrorCallback) for HAL_SPI_ErrorCallback
     stm32f1xx_hal_spi.o(i.HAL_SPI_IRQHandler) refers to stm32f1xx_hal_spi.o(i.SPI_DMAAbortOnError) for SPI_DMAAbortOnError
-    stm32f1xx_hal_spi.o(i.HAL_SPI_Init) refers to stm32f1xx_hal_spi.o(i.HAL_SPI_MspInit) for HAL_SPI_MspInit
+    stm32f1xx_hal_spi.o(i.HAL_SPI_Init) refers to spi.o(i.HAL_SPI_MspInit) for HAL_SPI_MspInit
     stm32f1xx_hal_spi.o(i.HAL_SPI_Receive) refers to stm32f1xx_hal_spi.o(i.HAL_SPI_TransmitReceive) for HAL_SPI_TransmitReceive
     stm32f1xx_hal_spi.o(i.HAL_SPI_Receive) refers to stm32f1xx_hal.o(i.HAL_GetTick) for HAL_GetTick
     stm32f1xx_hal_spi.o(i.HAL_SPI_Receive) refers to stm32f1xx_hal_spi.o(i.SPI_WaitFlagStateUntilTimeout) for SPI_WaitFlagStateUntilTimeout
@@ -1937,10 +1937,10 @@ Section Cross References
     socket.o(i.socket) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
     socket.o(i.socket) refers to socket.o(.data) for sock_any_port
     socket.o(i.socket) refers to socket.o(.bss) for sock_remained_size
-    w5500.o(i.WIZCHIP_READ) refers to w5500.o(.bss) for WIZCHIP
-    w5500.o(i.WIZCHIP_READ_BUF) refers to w5500.o(.bss) for WIZCHIP
-    w5500.o(i.WIZCHIP_WRITE) refers to w5500.o(.bss) for WIZCHIP
-    w5500.o(i.WIZCHIP_WRITE_BUF) refers to w5500.o(.bss) for WIZCHIP
+    w5500.o(i.WIZCHIP_READ) refers to wizchip_conf.o(.data) for WIZCHIP
+    w5500.o(i.WIZCHIP_READ_BUF) refers to wizchip_conf.o(.data) for WIZCHIP
+    w5500.o(i.WIZCHIP_WRITE) refers to wizchip_conf.o(.data) for WIZCHIP
+    w5500.o(i.WIZCHIP_WRITE_BUF) refers to wizchip_conf.o(.data) for WIZCHIP
     w5500.o(i.getSn_RX_RSR) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
     w5500.o(i.getSn_TX_FSR) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
     w5500.o(i.wiz_recv_data) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
@@ -1951,6 +1951,96 @@ Section Cross References
     w5500.o(i.wiz_send_data) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
     w5500.o(i.wiz_send_data) refers to w5500.o(i.WIZCHIP_WRITE_BUF) for WIZCHIP_WRITE_BUF
     w5500.o(i.wiz_send_data) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    spi.o(i.HAL_SPI_MspInit) refers to stm32f1xx_hal_gpio.o(i.HAL_GPIO_Init) for HAL_GPIO_Init
+    spi.o(i.spi2_init) refers to stm32f1xx_hal_spi.o(i.HAL_SPI_Init) for HAL_SPI_Init
+    spi.o(i.spi2_init) refers to spi.o(i.spi2_write_read_byte) for spi2_write_read_byte
+    spi.o(i.spi2_init) refers to spi.o(.bss) for g_spi_handle
+    spi.o(i.spi2_set_speed) refers to spi.o(.bss) for g_spi_handle
+    spi.o(i.spi2_write_read_byte) refers to stm32f1xx_hal_spi.o(i.HAL_SPI_TransmitReceive) for HAL_SPI_TransmitReceive
+    spi.o(i.spi2_write_read_byte) refers to spi.o(.bss) for g_spi_handle
+    wizchip_conf.o(i.ctlnetwork) refers to wizchip_conf.o(i.wizchip_setnetinfo) for wizchip_setnetinfo
+    wizchip_conf.o(i.ctlnetwork) refers to wizchip_conf.o(i.wizchip_getnetinfo) for wizchip_getnetinfo
+    wizchip_conf.o(i.ctlnetwork) refers to wizchip_conf.o(i.wizchip_setnetmode) for wizchip_setnetmode
+    wizchip_conf.o(i.ctlnetwork) refers to wizchip_conf.o(i.wizchip_getnetmode) for wizchip_getnetmode
+    wizchip_conf.o(i.ctlnetwork) refers to wizchip_conf.o(i.wizchip_settimeout) for wizchip_settimeout
+    wizchip_conf.o(i.ctlnetwork) refers to wizchip_conf.o(i.wizchip_gettimeout) for wizchip_gettimeout
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizchip_sw_reset) for wizchip_sw_reset
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizchip_init) for wizchip_init
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizchip_clrinterrupt) for wizchip_clrinterrupt
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizchip_getinterrupt) for wizchip_getinterrupt
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizchip_setinterruptmask) for wizchip_setinterruptmask
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizchip_getinterruptmask) for wizchip_getinterruptmask
+    wizchip_conf.o(i.ctlwizchip) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.ctlwizchip) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_reset) for wizphy_reset
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_setphyconf) for wizphy_setphyconf
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_getphyconf) for wizphy_getphyconf
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_getphystat) for wizphy_getphystat
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_setphypmode) for wizphy_setphypmode
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_getphypmode) for wizphy_getphypmode
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(i.wizphy_getphylink) for wizphy_getphylink
+    wizchip_conf.o(i.ctlwizchip) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_bus_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_bus_cbfunc) refers to wizchip_conf.o(i.wizchip_bus_readdata) for wizchip_bus_readdata
+    wizchip_conf.o(i.reg_wizchip_bus_cbfunc) refers to wizchip_conf.o(i.wizchip_bus_writedata) for wizchip_bus_writedata
+    wizchip_conf.o(i.reg_wizchip_busbuf_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_busbuf_cbfunc) refers to wizchip_conf.o(i.wizchip_bus_read_buf) for wizchip_bus_read_buf
+    wizchip_conf.o(i.reg_wizchip_busbuf_cbfunc) refers to wizchip_conf.o(i.wizchip_bus_write_buf) for wizchip_bus_write_buf
+    wizchip_conf.o(i.reg_wizchip_cris_cbfunc) refers to wizchip_conf.o(i.wizchip_cris_enter) for wizchip_cris_enter
+    wizchip_conf.o(i.reg_wizchip_cris_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_cris_cbfunc) refers to wizchip_conf.o(i.wizchip_cris_exit) for wizchip_cris_exit
+    wizchip_conf.o(i.reg_wizchip_cs_cbfunc) refers to wizchip_conf.o(i.wizchip_cs_select) for wizchip_cs_select
+    wizchip_conf.o(i.reg_wizchip_cs_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_cs_cbfunc) refers to wizchip_conf.o(i.wizchip_cs_deselect) for wizchip_cs_deselect
+    wizchip_conf.o(i.reg_wizchip_qspi_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_qspi_cbfunc) refers to wizchip_conf.o(i.wizchip_qspi_read) for wizchip_qspi_read
+    wizchip_conf.o(i.reg_wizchip_qspi_cbfunc) refers to wizchip_conf.o(i.wizchip_qspi_write) for wizchip_qspi_write
+    wizchip_conf.o(i.reg_wizchip_spi_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_spi_cbfunc) refers to wizchip_conf.o(i.wizchip_spi_readbyte) for wizchip_spi_readbyte
+    wizchip_conf.o(i.reg_wizchip_spi_cbfunc) refers to wizchip_conf.o(i.wizchip_spi_writebyte) for wizchip_spi_writebyte
+    wizchip_conf.o(i.reg_wizchip_spiburst_cbfunc) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.reg_wizchip_spiburst_cbfunc) refers to wizchip_conf.o(i.wizchip_spi_readburst) for wizchip_spi_readburst
+    wizchip_conf.o(i.reg_wizchip_spiburst_cbfunc) refers to wizchip_conf.o(i.wizchip_spi_writeburst) for wizchip_spi_writeburst
+    wizchip_conf.o(i.wizchip_bus_read_buf) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.wizchip_bus_write_buf) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.wizchip_clrinterrupt) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizchip_getinterrupt) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizchip_getinterruptmask) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizchip_getnetinfo) refers to w5500.o(i.WIZCHIP_READ_BUF) for WIZCHIP_READ_BUF
+    wizchip_conf.o(i.wizchip_getnetinfo) refers to wizchip_conf.o(.data) for _DNS_
+    wizchip_conf.o(i.wizchip_getnetmode) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizchip_gettimeout) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizchip_init) refers to wizchip_conf.o(i.wizchip_sw_reset) for wizchip_sw_reset
+    wizchip_conf.o(i.wizchip_init) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizchip_setinterruptmask) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizchip_setnetinfo) refers to w5500.o(i.WIZCHIP_WRITE_BUF) for WIZCHIP_WRITE_BUF
+    wizchip_conf.o(i.wizchip_setnetinfo) refers to wizchip_conf.o(.data) for _DNS_
+    wizchip_conf.o(i.wizchip_setnetmode) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizchip_setnetmode) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizchip_settimeout) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizchip_spi_readburst) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.wizchip_spi_writeburst) refers to wizchip_conf.o(.data) for WIZCHIP
+    wizchip_conf.o(i.wizchip_sw_reset) refers to w5500.o(i.WIZCHIP_READ_BUF) for WIZCHIP_READ_BUF
+    wizchip_conf.o(i.wizchip_sw_reset) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizchip_sw_reset) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizchip_sw_reset) refers to w5500.o(i.WIZCHIP_WRITE_BUF) for WIZCHIP_WRITE_BUF
+    wizchip_conf.o(i.wizphy_getphyconf) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizphy_getphylink) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizphy_getphypmode) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizphy_getphystat) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizphy_reset) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizphy_reset) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizphy_setphyconf) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizphy_setphyconf) refers to wizchip_conf.o(i.wizphy_reset) for wizphy_reset
+    wizchip_conf.o(i.wizphy_setphypmode) refers to w5500.o(i.WIZCHIP_READ) for WIZCHIP_READ
+    wizchip_conf.o(i.wizphy_setphypmode) refers to w5500.o(i.WIZCHIP_WRITE) for WIZCHIP_WRITE
+    wizchip_conf.o(i.wizphy_setphypmode) refers to wizchip_conf.o(i.wizphy_reset) for wizphy_reset
+    wizchip_conf.o(.data) refers to wizchip_conf.o(i.wizchip_cris_enter) for wizchip_cris_enter
+    wizchip_conf.o(.data) refers to wizchip_conf.o(i.wizchip_cris_exit) for wizchip_cris_exit
+    wizchip_conf.o(.data) refers to wizchip_conf.o(i.wizchip_cs_select) for wizchip_cs_select
+    wizchip_conf.o(.data) refers to wizchip_conf.o(i.wizchip_cs_deselect) for wizchip_cs_deselect
+    wizchip_conf.o(.data) refers to wizchip_conf.o(i.wizchip_bus_readdata) for wizchip_bus_readdata
+    wizchip_conf.o(.data) refers to wizchip_conf.o(i.wizchip_bus_writedata) for wizchip_bus_writedata
     use_no_semi_2.o(.text) refers (Special) to use_no_semi.o(.text) for __use_no_semihosting_swi
     __2printf.o(.text) refers to _printf_char_file.o(.text) for _printf_char_file
     __2printf.o(.text) refers to usart.o(.data) for __stdout
@@ -2881,9 +2971,59 @@ Removing Unused input sections from the image.
     Removing w5500.o(i.wiz_recv_data), (132 bytes).
     Removing w5500.o(i.wiz_recv_ignore), (102 bytes).
     Removing w5500.o(i.wiz_send_data), (132 bytes).
-    Removing w5500.o(.bss), (44 bytes).
+    Removing spi.o(.rev16_text), (4 bytes).
+    Removing spi.o(.revsh_text), (4 bytes).
+    Removing spi.o(.rrx_text), (6 bytes).
+    Removing spi.o(i.HAL_SPI_MspInit), (124 bytes).
+    Removing spi.o(i.spi2_init), (84 bytes).
+    Removing spi.o(i.spi2_set_speed), (72 bytes).
+    Removing spi.o(i.spi2_write_read_byte), (32 bytes).
+    Removing spi.o(.bss), (88 bytes).
+    Removing wizchip_conf.o(i.ctlnetwork), (80 bytes).
+    Removing wizchip_conf.o(i.ctlwizchip), (300 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_bus_cbfunc), (52 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_busbuf_cbfunc), (52 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_cris_cbfunc), (40 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_cs_cbfunc), (40 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_qspi_cbfunc), (52 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_spi_cbfunc), (52 bytes).
+    Removing wizchip_conf.o(i.reg_wizchip_spiburst_cbfunc), (52 bytes).
+    Removing wizchip_conf.o(i.wizchip_bus_read_buf), (52 bytes).
+    Removing wizchip_conf.o(i.wizchip_bus_readdata), (6 bytes).
+    Removing wizchip_conf.o(i.wizchip_bus_write_buf), (52 bytes).
+    Removing wizchip_conf.o(i.wizchip_bus_writedata), (4 bytes).
+    Removing wizchip_conf.o(i.wizchip_clrinterrupt), (60 bytes).
+    Removing wizchip_conf.o(i.wizchip_cris_enter), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_cris_exit), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_cs_deselect), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_cs_select), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_getinterrupt), (40 bytes).
+    Removing wizchip_conf.o(i.wizchip_getinterruptmask), (38 bytes).
+    Removing wizchip_conf.o(i.wizchip_getnetinfo), (92 bytes).
+    Removing wizchip_conf.o(i.wizchip_getnetmode), (10 bytes).
+    Removing wizchip_conf.o(i.wizchip_gettimeout), (40 bytes).
+    Removing wizchip_conf.o(i.wizchip_init), (144 bytes).
+    Removing wizchip_conf.o(i.wizchip_qspi_read), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_qspi_write), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_setinterruptmask), (30 bytes).
+    Removing wizchip_conf.o(i.wizchip_setnetinfo), (88 bytes).
+    Removing wizchip_conf.o(i.wizchip_setnetmode), (38 bytes).
+    Removing wizchip_conf.o(i.wizchip_settimeout), (38 bytes).
+    Removing wizchip_conf.o(i.wizchip_spi_readburst), (36 bytes).
+    Removing wizchip_conf.o(i.wizchip_spi_readbyte), (4 bytes).
+    Removing wizchip_conf.o(i.wizchip_spi_writeburst), (36 bytes).
+    Removing wizchip_conf.o(i.wizchip_spi_writebyte), (2 bytes).
+    Removing wizchip_conf.o(i.wizchip_sw_reset), (114 bytes).
+    Removing wizchip_conf.o(i.wizphy_getphyconf), (120 bytes).
+    Removing wizchip_conf.o(i.wizphy_getphylink), (24 bytes).
+    Removing wizchip_conf.o(i.wizphy_getphypmode), (30 bytes).
+    Removing wizchip_conf.o(i.wizphy_getphystat), (28 bytes).
+    Removing wizchip_conf.o(i.wizphy_reset), (52 bytes).
+    Removing wizchip_conf.o(i.wizphy_setphyconf), (88 bytes).
+    Removing wizchip_conf.o(i.wizphy_setphypmode), (100 bytes).
+    Removing wizchip_conf.o(.data), (49 bytes).
 
-775 unused section(s) (total 76822 bytes) removed from the image.
+825 unused section(s) (total 79339 bytes) removed from the image.
 
 ==============================================================================
 
@@ -2895,100 +3035,102 @@ Image Symbol Table
 
     ../clib/angel/boardlib.s                 0x00000000   Number         0  boardinit1.o ABSOLUTE
     ../clib/angel/boardlib.s                 0x00000000   Number         0  boardinit2.o ABSOLUTE
-    ../clib/angel/boardlib.s                 0x00000000   Number         0  boardinit3.o ABSOLUTE
     ../clib/angel/boardlib.s                 0x00000000   Number         0  boardshut.o ABSOLUTE
-    ../clib/angel/handlers.s                 0x00000000   Number         0  __scatter_copy.o ABSOLUTE
+    ../clib/angel/boardlib.s                 0x00000000   Number         0  boardinit3.o ABSOLUTE
     ../clib/angel/handlers.s                 0x00000000   Number         0  __scatter_zi.o ABSOLUTE
-    ../clib/angel/kernel.s                   0x00000000   Number         0  rtexit2.o ABSOLUTE
-    ../clib/angel/kernel.s                   0x00000000   Number         0  __rtentry2.o ABSOLUTE
+    ../clib/angel/handlers.s                 0x00000000   Number         0  __scatter_copy.o ABSOLUTE
     ../clib/angel/kernel.s                   0x00000000   Number         0  __rtentry4.o ABSOLUTE
+    ../clib/angel/kernel.s                   0x00000000   Number         0  __rtentry2.o ABSOLUTE
+    ../clib/angel/kernel.s                   0x00000000   Number         0  rtexit2.o ABSOLUTE
     ../clib/angel/kernel.s                   0x00000000   Number         0  rtexit.o ABSOLUTE
     ../clib/angel/kernel.s                   0x00000000   Number         0  __rtentry.o ABSOLUTE
     ../clib/angel/rt.s                       0x00000000   Number         0  rt_raise.o ABSOLUTE
     ../clib/angel/scatter.s                  0x00000000   Number         0  __scatter.o ABSOLUTE
     ../clib/angel/startup.s                  0x00000000   Number         0  __main.o ABSOLUTE
-    ../clib/angel/sys.s                      0x00000000   Number         0  libspace.o ABSOLUTE
-    ../clib/angel/sys.s                      0x00000000   Number         0  use_no_semi_2.o ABSOLUTE
     ../clib/angel/sys.s                      0x00000000   Number         0  use_no_semi.o ABSOLUTE
+    ../clib/angel/sys.s                      0x00000000   Number         0  use_no_semi_2.o ABSOLUTE
     ../clib/angel/sys.s                      0x00000000   Number         0  sys_stackheap_outer.o ABSOLUTE
+    ../clib/angel/sys.s                      0x00000000   Number         0  libspace.o ABSOLUTE
     ../clib/armsys.c                         0x00000000   Number         0  argv_veneer.o ABSOLUTE
-    ../clib/armsys.c                         0x00000000   Number         0  no_argv.o ABSOLUTE
+    ../clib/armsys.c                         0x00000000   Number         0  argv_veneer.o ABSOLUTE
     ../clib/armsys.c                         0x00000000   Number         0  _get_argv_nomalloc.o ABSOLUTE
-    ../clib/armsys.c                         0x00000000   Number         0  argv_veneer.o ABSOLUTE
+    ../clib/armsys.c                         0x00000000   Number         0  no_argv.o ABSOLUTE
     ../clib/heapalloc.c                      0x00000000   Number         0  hrguard.o ABSOLUTE
     ../clib/heapaux.c                        0x00000000   Number         0  heapauxi.o ABSOLUTE
-    ../clib/libinit.s                        0x00000000   Number         0  libshutdown2.o ABSOLUTE
+    ../clib/libinit.s                        0x00000000   Number         0  libinit2.o ABSOLUTE
     ../clib/libinit.s                        0x00000000   Number         0  libshutdown.o ABSOLUTE
     ../clib/libinit.s                        0x00000000   Number         0  libinit.o ABSOLUTE
-    ../clib/libinit.s                        0x00000000   Number         0  libinit2.o ABSOLUTE
-    ../clib/memcpset.s                       0x00000000   Number         0  aeabi_memset.o ABSOLUTE
-    ../clib/memcpset.s                       0x00000000   Number         0  memset.o ABSOLUTE
+    ../clib/libinit.s                        0x00000000   Number         0  libshutdown2.o ABSOLUTE
+    ../clib/memcpset.s                       0x00000000   Number         0  rt_memclr_w.o ABSOLUTE
     ../clib/memcpset.s                       0x00000000   Number         0  rt_memcpy_v6.o ABSOLUTE
     ../clib/memcpset.s                       0x00000000   Number         0  rt_memcpy_w.o ABSOLUTE
+    ../clib/memcpset.s                       0x00000000   Number         0  memset.o ABSOLUTE
+    ../clib/memcpset.s                       0x00000000   Number         0  aeabi_memset.o ABSOLUTE
     ../clib/memcpset.s                       0x00000000   Number         0  rt_memclr.o ABSOLUTE
-    ../clib/memcpset.s                       0x00000000   Number         0  rt_memclr_w.o ABSOLUTE
     ../clib/misc.s                           0x00000000   Number         0  printf_stubs.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_flags_ss.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_ss.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  __printf_flags.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_hex_int_ll_ptr.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_ss_wp.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_flags_ss_wp.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  _printf_hex_ll_ptr.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_nopercent.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  _printf_hex_int.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_hex_int_ptr.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_hex_ptr.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_hex_int_ll.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  _printf_char_file.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  _printf_hex_ll.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_char.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  _snputc.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  _printf_char_file.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  _printf_hex_int.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  _printf_hex_ll.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_dec.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  _sputc.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  _printf_hex_ll_ptr.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_str.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  __printf.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  noretval__2snprintf.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  noretval__2printf.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_nopercent.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  __2snprintf.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  __2printf.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_flags_wp.o ABSOLUTE
-    ../clib/printf.c                         0x00000000   Number         0  __printf_wp.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_flags_ss_wp.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_ss_wp.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_intcommon.o ABSOLUTE
     ../clib/printf.c                         0x00000000   Number         0  _printf_char_common.o ABSOLUTE
-    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_p.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_flags_wp.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_wp.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_flags_ss.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  __printf_ss.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  _sputc.o ABSOLUTE
+    ../clib/printf.c                         0x00000000   Number         0  _snputc.o ABSOLUTE
     ../clib/printf_percent.s                 0x00000000   Number         0  _printf_percent_end.o ABSOLUTE
-    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_percent.o ABSOLUTE
-    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_u.o ABSOLUTE
-    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_d.o ABSOLUTE
-    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_s.o ABSOLUTE
     ../clib/printf_percent.s                 0x00000000   Number         0  _printf_c.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_cppl_inner.o ABSOLUTE
+    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_s.o ABSOLUTE
+    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_p.o ABSOLUTE
+    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_d.o ABSOLUTE
+    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_u.o ABSOLUTE
+    ../clib/printf_percent.s                 0x00000000   Number         0  _printf_percent.o ABSOLUTE
     ../clib/signal.c                         0x00000000   Number         0  defsig_other.o ABSOLUTE
     ../clib/signal.c                         0x00000000   Number         0  defsig_segv_inner.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_rtmem_outer.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_rtmem_formal.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_cppl_inner.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_exit.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_rtmem_inner.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  __raise.o ABSOLUTE
     ../clib/signal.c                         0x00000000   Number         0  defsig_general.o ABSOLUTE
     ../clib/signal.c                         0x00000000   Number         0  defsig_abrt_inner.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_pvfn_inner.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  __raise.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_stak_inner.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_rtmem_inner.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_rtred_inner.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_exit.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_rtmem_formal.o ABSOLUTE
-    ../clib/signal.c                         0x00000000   Number         0  defsig_rtmem_outer.o ABSOLUTE
     ../clib/signal.c                         0x00000000   Number         0  defsig_fpe_inner.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_rtred_inner.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_stak_inner.o ABSOLUTE
+    ../clib/signal.c                         0x00000000   Number         0  defsig_pvfn_inner.o ABSOLUTE
     ../clib/signal.s                         0x00000000   Number         0  defsig.o ABSOLUTE
-    ../clib/stdio.c                          0x00000000   Number         0  ferror_locked.o ABSOLUTE
     ../clib/stdio.c                          0x00000000   Number         0  ferror.o ABSOLUTE
+    ../clib/stdio.c                          0x00000000   Number         0  ferror_locked.o ABSOLUTE
     ../clib/stdlib.c                         0x00000000   Number         0  exit.o ABSOLUTE
-    ../clib/string.c                         0x00000000   Number         0  strlen.o ABSOLUTE
     ../clib/string.c                         0x00000000   Number         0  strcpy.o ABSOLUTE
+    ../clib/string.c                         0x00000000   Number         0  strlen.o ABSOLUTE
     ../fplib/fpinit.s                        0x00000000   Number         0  fpinit.o ABSOLUTE
     ..\..\BSP\Src\btim.c                     0x00000000   Number         0  btim.o ABSOLUTE
     ..\..\BSP\Src\key.c                      0x00000000   Number         0  key.o ABSOLUTE
     ..\..\BSP\Src\led.c                      0x00000000   Number         0  led.o ABSOLUTE
     ..\..\BSP\Src\socket.c                   0x00000000   Number         0  socket.o ABSOLUTE
+    ..\..\BSP\Src\spi.c                      0x00000000   Number         0  spi.o ABSOLUTE
     ..\..\BSP\Src\w5500.c                    0x00000000   Number         0  w5500.o ABSOLUTE
+    ..\..\BSP\Src\wizchip_conf.c             0x00000000   Number         0  wizchip_conf.o ABSOLUTE
     ..\..\Core\Src\freertos_demo.c           0x00000000   Number         0  freertos_demo.o ABSOLUTE
     ..\..\Core\Src\main.c                    0x00000000   Number         0  main.o ABSOLUTE
     ..\..\Core\Src\stm32f1xx_it.c            0x00000000   Number         0  stm32f1xx_it.o ABSOLUTE
@@ -3038,6 +3180,7 @@ Image Symbol Table
     ..\\..\\BSP\\Src\\btim.c                 0x00000000   Number         0  btim.o ABSOLUTE
     ..\\..\\BSP\\Src\\key.c                  0x00000000   Number         0  key.o ABSOLUTE
     ..\\..\\BSP\\Src\\led.c                  0x00000000   Number         0  led.o ABSOLUTE
+    ..\\..\\BSP\\Src\\spi.c                  0x00000000   Number         0  spi.o ABSOLUTE
     ..\\..\\Core\\Src\\freertos_demo.c       0x00000000   Number         0  freertos_demo.o ABSOLUTE
     ..\\..\\Core\\Src\\main.c                0x00000000   Number         0  main.o ABSOLUTE
     ..\\..\\Core\\Src\\stm32f1xx_it.c        0x00000000   Number         0  stm32f1xx_it.o ABSOLUTE
@@ -3740,84 +3883,84 @@ Memory Map of the image
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
     0x08000000   0x08000000   0x00000130   Data   RO            3    RESET               startup_stm32f103xe.o
-    0x08000130   0x08000130   0x00000008   Code   RO         6024  * !!!main             c_w.l(__main.o)
-    0x08000138   0x08000138   0x00000034   Code   RO         6195    !!!scatter          c_w.l(__scatter.o)
-    0x0800016c   0x0800016c   0x0000001a   Code   RO         6197    !!handler_copy      c_w.l(__scatter_copy.o)
+    0x08000130   0x08000130   0x00000008   Code   RO         6330  * !!!main             c_w.l(__main.o)
+    0x08000138   0x08000138   0x00000034   Code   RO         6501    !!!scatter          c_w.l(__scatter.o)
+    0x0800016c   0x0800016c   0x0000001a   Code   RO         6503    !!handler_copy      c_w.l(__scatter_copy.o)
     0x08000186   0x08000186   0x00000002   PAD
-    0x08000188   0x08000188   0x0000001c   Code   RO         6199    !!handler_zi        c_w.l(__scatter_zi.o)
-    0x080001a4   0x080001a4   0x00000000   Code   RO         6007    .ARM.Collect$$_printf_percent$$00000000  c_w.l(_printf_percent.o)
-    0x080001a4   0x080001a4   0x00000006   Code   RO         6004    .ARM.Collect$$_printf_percent$$00000002  c_w.l(_printf_p.o)
-    0x080001aa   0x080001aa   0x00000006   Code   RO         6005    .ARM.Collect$$_printf_percent$$00000009  c_w.l(_printf_d.o)
-    0x080001b0   0x080001b0   0x00000006   Code   RO         6003    .ARM.Collect$$_printf_percent$$00000014  c_w.l(_printf_s.o)
-    0x080001b6   0x080001b6   0x00000004   Code   RO         6041    .ARM.Collect$$_printf_percent$$00000017  c_w.l(_printf_percent_end.o)
-    0x080001ba   0x080001ba   0x00000002   Code   RO         6074    .ARM.Collect$$libinit$$00000000  c_w.l(libinit.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6081    .ARM.Collect$$libinit$$00000002  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6083    .ARM.Collect$$libinit$$00000004  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6086    .ARM.Collect$$libinit$$0000000A  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6088    .ARM.Collect$$libinit$$0000000C  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6090    .ARM.Collect$$libinit$$0000000E  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6093    .ARM.Collect$$libinit$$00000011  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6095    .ARM.Collect$$libinit$$00000013  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6097    .ARM.Collect$$libinit$$00000015  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6099    .ARM.Collect$$libinit$$00000017  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6101    .ARM.Collect$$libinit$$00000019  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6103    .ARM.Collect$$libinit$$0000001B  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6105    .ARM.Collect$$libinit$$0000001D  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6107    .ARM.Collect$$libinit$$0000001F  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6109    .ARM.Collect$$libinit$$00000021  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6111    .ARM.Collect$$libinit$$00000023  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6113    .ARM.Collect$$libinit$$00000025  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6117    .ARM.Collect$$libinit$$0000002C  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6119    .ARM.Collect$$libinit$$0000002E  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6121    .ARM.Collect$$libinit$$00000030  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000000   Code   RO         6123    .ARM.Collect$$libinit$$00000032  c_w.l(libinit2.o)
-    0x080001bc   0x080001bc   0x00000002   Code   RO         6124    .ARM.Collect$$libinit$$00000033  c_w.l(libinit2.o)
-    0x080001be   0x080001be   0x00000002   Code   RO         6142    .ARM.Collect$$libshutdown$$00000000  c_w.l(libshutdown.o)
-    0x080001c0   0x080001c0   0x00000000   Code   RO         6150    .ARM.Collect$$libshutdown$$00000002  c_w.l(libshutdown2.o)
-    0x080001c0   0x080001c0   0x00000000   Code   RO         6152    .ARM.Collect$$libshutdown$$00000004  c_w.l(libshutdown2.o)
-    0x080001c0   0x080001c0   0x00000000   Code   RO         6155    .ARM.Collect$$libshutdown$$00000007  c_w.l(libshutdown2.o)
-    0x080001c0   0x080001c0   0x00000000   Code   RO         6158    .ARM.Collect$$libshutdown$$0000000A  c_w.l(libshutdown2.o)
-    0x080001c0   0x080001c0   0x00000000   Code   RO         6160    .ARM.Collect$$libshutdown$$0000000C  c_w.l(libshutdown2.o)
-    0x080001c0   0x080001c0   0x00000000   Code   RO         6163    .ARM.Collect$$libshutdown$$0000000F  c_w.l(libshutdown2.o)
-    0x080001c0   0x080001c0   0x00000002   Code   RO         6164    .ARM.Collect$$libshutdown$$00000010  c_w.l(libshutdown2.o)
-    0x080001c2   0x080001c2   0x00000000   Code   RO         6028    .ARM.Collect$$rtentry$$00000000  c_w.l(__rtentry.o)
-    0x080001c2   0x080001c2   0x00000000   Code   RO         6045    .ARM.Collect$$rtentry$$00000002  c_w.l(__rtentry2.o)
-    0x080001c2   0x080001c2   0x00000006   Code   RO         6057    .ARM.Collect$$rtentry$$00000004  c_w.l(__rtentry4.o)
-    0x080001c8   0x080001c8   0x00000000   Code   RO         6047    .ARM.Collect$$rtentry$$00000009  c_w.l(__rtentry2.o)
-    0x080001c8   0x080001c8   0x00000004   Code   RO         6048    .ARM.Collect$$rtentry$$0000000A  c_w.l(__rtentry2.o)
-    0x080001cc   0x080001cc   0x00000000   Code   RO         6050    .ARM.Collect$$rtentry$$0000000C  c_w.l(__rtentry2.o)
-    0x080001cc   0x080001cc   0x00000008   Code   RO         6051    .ARM.Collect$$rtentry$$0000000D  c_w.l(__rtentry2.o)
-    0x080001d4   0x080001d4   0x00000002   Code   RO         6078    .ARM.Collect$$rtexit$$00000000  c_w.l(rtexit.o)
-    0x080001d6   0x080001d6   0x00000000   Code   RO         6126    .ARM.Collect$$rtexit$$00000002  c_w.l(rtexit2.o)
-    0x080001d6   0x080001d6   0x00000004   Code   RO         6127    .ARM.Collect$$rtexit$$00000003  c_w.l(rtexit2.o)
-    0x080001da   0x080001da   0x00000006   Code   RO         6128    .ARM.Collect$$rtexit$$00000004  c_w.l(rtexit2.o)
+    0x08000188   0x08000188   0x0000001c   Code   RO         6505    !!handler_zi        c_w.l(__scatter_zi.o)
+    0x080001a4   0x080001a4   0x00000000   Code   RO         6313    .ARM.Collect$$_printf_percent$$00000000  c_w.l(_printf_percent.o)
+    0x080001a4   0x080001a4   0x00000006   Code   RO         6310    .ARM.Collect$$_printf_percent$$00000002  c_w.l(_printf_p.o)
+    0x080001aa   0x080001aa   0x00000006   Code   RO         6311    .ARM.Collect$$_printf_percent$$00000009  c_w.l(_printf_d.o)
+    0x080001b0   0x080001b0   0x00000006   Code   RO         6309    .ARM.Collect$$_printf_percent$$00000014  c_w.l(_printf_s.o)
+    0x080001b6   0x080001b6   0x00000004   Code   RO         6347    .ARM.Collect$$_printf_percent$$00000017  c_w.l(_printf_percent_end.o)
+    0x080001ba   0x080001ba   0x00000002   Code   RO         6380    .ARM.Collect$$libinit$$00000000  c_w.l(libinit.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6387    .ARM.Collect$$libinit$$00000002  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6389    .ARM.Collect$$libinit$$00000004  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6392    .ARM.Collect$$libinit$$0000000A  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6394    .ARM.Collect$$libinit$$0000000C  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6396    .ARM.Collect$$libinit$$0000000E  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6399    .ARM.Collect$$libinit$$00000011  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6401    .ARM.Collect$$libinit$$00000013  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6403    .ARM.Collect$$libinit$$00000015  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6405    .ARM.Collect$$libinit$$00000017  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6407    .ARM.Collect$$libinit$$00000019  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6409    .ARM.Collect$$libinit$$0000001B  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6411    .ARM.Collect$$libinit$$0000001D  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6413    .ARM.Collect$$libinit$$0000001F  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6415    .ARM.Collect$$libinit$$00000021  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6417    .ARM.Collect$$libinit$$00000023  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6419    .ARM.Collect$$libinit$$00000025  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6423    .ARM.Collect$$libinit$$0000002C  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6425    .ARM.Collect$$libinit$$0000002E  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6427    .ARM.Collect$$libinit$$00000030  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000000   Code   RO         6429    .ARM.Collect$$libinit$$00000032  c_w.l(libinit2.o)
+    0x080001bc   0x080001bc   0x00000002   Code   RO         6430    .ARM.Collect$$libinit$$00000033  c_w.l(libinit2.o)
+    0x080001be   0x080001be   0x00000002   Code   RO         6448    .ARM.Collect$$libshutdown$$00000000  c_w.l(libshutdown.o)
+    0x080001c0   0x080001c0   0x00000000   Code   RO         6456    .ARM.Collect$$libshutdown$$00000002  c_w.l(libshutdown2.o)
+    0x080001c0   0x080001c0   0x00000000   Code   RO         6458    .ARM.Collect$$libshutdown$$00000004  c_w.l(libshutdown2.o)
+    0x080001c0   0x080001c0   0x00000000   Code   RO         6461    .ARM.Collect$$libshutdown$$00000007  c_w.l(libshutdown2.o)
+    0x080001c0   0x080001c0   0x00000000   Code   RO         6464    .ARM.Collect$$libshutdown$$0000000A  c_w.l(libshutdown2.o)
+    0x080001c0   0x080001c0   0x00000000   Code   RO         6466    .ARM.Collect$$libshutdown$$0000000C  c_w.l(libshutdown2.o)
+    0x080001c0   0x080001c0   0x00000000   Code   RO         6469    .ARM.Collect$$libshutdown$$0000000F  c_w.l(libshutdown2.o)
+    0x080001c0   0x080001c0   0x00000002   Code   RO         6470    .ARM.Collect$$libshutdown$$00000010  c_w.l(libshutdown2.o)
+    0x080001c2   0x080001c2   0x00000000   Code   RO         6334    .ARM.Collect$$rtentry$$00000000  c_w.l(__rtentry.o)
+    0x080001c2   0x080001c2   0x00000000   Code   RO         6351    .ARM.Collect$$rtentry$$00000002  c_w.l(__rtentry2.o)
+    0x080001c2   0x080001c2   0x00000006   Code   RO         6363    .ARM.Collect$$rtentry$$00000004  c_w.l(__rtentry4.o)
+    0x080001c8   0x080001c8   0x00000000   Code   RO         6353    .ARM.Collect$$rtentry$$00000009  c_w.l(__rtentry2.o)
+    0x080001c8   0x080001c8   0x00000004   Code   RO         6354    .ARM.Collect$$rtentry$$0000000A  c_w.l(__rtentry2.o)
+    0x080001cc   0x080001cc   0x00000000   Code   RO         6356    .ARM.Collect$$rtentry$$0000000C  c_w.l(__rtentry2.o)
+    0x080001cc   0x080001cc   0x00000008   Code   RO         6357    .ARM.Collect$$rtentry$$0000000D  c_w.l(__rtentry2.o)
+    0x080001d4   0x080001d4   0x00000002   Code   RO         6384    .ARM.Collect$$rtexit$$00000000  c_w.l(rtexit.o)
+    0x080001d6   0x080001d6   0x00000000   Code   RO         6432    .ARM.Collect$$rtexit$$00000002  c_w.l(rtexit2.o)
+    0x080001d6   0x080001d6   0x00000004   Code   RO         6433    .ARM.Collect$$rtexit$$00000003  c_w.l(rtexit2.o)
+    0x080001da   0x080001da   0x00000006   Code   RO         6434    .ARM.Collect$$rtexit$$00000004  c_w.l(rtexit2.o)
     0x080001e0   0x080001e0   0x00000096   Code   RO         5557    .emb_text           port.o
     0x08000276   0x08000276   0x00000002   PAD
     0x08000278   0x08000278   0x00000040   Code   RO            4    .text               startup_stm32f103xe.o
-    0x080002b8   0x080002b8   0x00000002   Code   RO         5945    .text               c_w.l(use_no_semi_2.o)
+    0x080002b8   0x080002b8   0x00000002   Code   RO         6251    .text               c_w.l(use_no_semi_2.o)
     0x080002ba   0x080002ba   0x00000002   PAD
-    0x080002bc   0x080002bc   0x00000018   Code   RO         5947    .text               c_w.l(__2printf.o)
-    0x080002d4   0x080002d4   0x00000068   Code   RO         5955    .text               c_w.l(__printf.o)
-    0x0800033c   0x0800033c   0x00000052   Code   RO         5957    .text               c_w.l(_printf_str.o)
+    0x080002bc   0x080002bc   0x00000018   Code   RO         6253    .text               c_w.l(__2printf.o)
+    0x080002d4   0x080002d4   0x00000068   Code   RO         6261    .text               c_w.l(__printf.o)
+    0x0800033c   0x0800033c   0x00000052   Code   RO         6263    .text               c_w.l(_printf_str.o)
     0x0800038e   0x0800038e   0x00000002   PAD
-    0x08000390   0x08000390   0x00000078   Code   RO         5959    .text               c_w.l(_printf_dec.o)
-    0x08000408   0x08000408   0x00000054   Code   RO         5970    .text               c_w.l(_printf_hex_ptr.o)
-    0x0800045c   0x0800045c   0x0000008a   Code   RO         6012    .text               c_w.l(rt_memcpy_v6.o)
-    0x080004e6   0x080004e6   0x00000010   Code   RO         6016    .text               c_w.l(aeabi_memset.o)
-    0x080004f6   0x080004f6   0x00000044   Code   RO         6018    .text               c_w.l(rt_memclr.o)
-    0x0800053a   0x0800053a   0x0000004e   Code   RO         6020    .text               c_w.l(rt_memclr_w.o)
-    0x08000588   0x08000588   0x00000006   Code   RO         6022    .text               c_w.l(heapauxi.o)
-    0x0800058e   0x0800058e   0x00000002   Code   RO         6026    .text               c_w.l(use_no_semi.o)
-    0x08000590   0x08000590   0x000000b2   Code   RO         6029    .text               c_w.l(_printf_intcommon.o)
+    0x08000390   0x08000390   0x00000078   Code   RO         6265    .text               c_w.l(_printf_dec.o)
+    0x08000408   0x08000408   0x00000054   Code   RO         6276    .text               c_w.l(_printf_hex_ptr.o)
+    0x0800045c   0x0800045c   0x0000008a   Code   RO         6318    .text               c_w.l(rt_memcpy_v6.o)
+    0x080004e6   0x080004e6   0x00000010   Code   RO         6322    .text               c_w.l(aeabi_memset.o)
+    0x080004f6   0x080004f6   0x00000044   Code   RO         6324    .text               c_w.l(rt_memclr.o)
+    0x0800053a   0x0800053a   0x0000004e   Code   RO         6326    .text               c_w.l(rt_memclr_w.o)
+    0x08000588   0x08000588   0x00000006   Code   RO         6328    .text               c_w.l(heapauxi.o)
+    0x0800058e   0x0800058e   0x00000002   Code   RO         6332    .text               c_w.l(use_no_semi.o)
+    0x08000590   0x08000590   0x000000b2   Code   RO         6335    .text               c_w.l(_printf_intcommon.o)
     0x08000642   0x08000642   0x00000002   PAD
-    0x08000644   0x08000644   0x00000030   Code   RO         6031    .text               c_w.l(_printf_char_common.o)
-    0x08000674   0x08000674   0x0000002c   Code   RO         6037    .text               c_w.l(_printf_char.o)
-    0x080006a0   0x080006a0   0x00000024   Code   RO         6039    .text               c_w.l(_printf_char_file.o)
-    0x080006c4   0x080006c4   0x00000064   Code   RO         6042    .text               c_w.l(rt_memcpy_w.o)
-    0x08000728   0x08000728   0x00000008   Code   RO         6061    .text               c_w.l(ferror.o)
-    0x08000730   0x08000730   0x0000004a   Code   RO         6065    .text               c_w.l(sys_stackheap_outer.o)
-    0x0800077a   0x0800077a   0x00000012   Code   RO         6067    .text               c_w.l(exit.o)
-    0x0800078c   0x0800078c   0x00000008   Code   RO         6075    .text               c_w.l(libspace.o)
+    0x08000644   0x08000644   0x00000030   Code   RO         6337    .text               c_w.l(_printf_char_common.o)
+    0x08000674   0x08000674   0x0000002c   Code   RO         6343    .text               c_w.l(_printf_char.o)
+    0x080006a0   0x080006a0   0x00000024   Code   RO         6345    .text               c_w.l(_printf_char_file.o)
+    0x080006c4   0x080006c4   0x00000064   Code   RO         6348    .text               c_w.l(rt_memcpy_w.o)
+    0x08000728   0x08000728   0x00000008   Code   RO         6367    .text               c_w.l(ferror.o)
+    0x08000730   0x08000730   0x0000004a   Code   RO         6371    .text               c_w.l(sys_stackheap_outer.o)
+    0x0800077a   0x0800077a   0x00000012   Code   RO         6373    .text               c_w.l(exit.o)
+    0x0800078c   0x0800078c   0x00000008   Code   RO         6381    .text               c_w.l(libspace.o)
     0x08000794   0x08000794   0x00000004   Code   RO           13    i.BusFault_Handler  stm32f1xx_it.o
     0x08000798   0x08000798   0x00000002   Code   RO           14    i.DebugMon_Handler  stm32f1xx_it.o
     0x0800079a   0x0800079a   0x00000002   PAD
@@ -3968,8 +4111,8 @@ Memory Map of the image
     0x080044cc   0x080044cc   0x000001c0   Code   RO         4200    i.xTaskResumeAll    tasks.o
     0x0800468c   0x0800468c   0x00000074   Code   RO         4936    i.xTimerCreateTimerTask  timers.o
     0x08004700   0x08004700   0x00000018   Data   RO          250    .constdata          system_stm32f1xx.o
-    0x08004718   0x08004718   0x00000028   Data   RO         5971    .constdata          c_w.l(_printf_hex_ptr.o)
-    0x08004740   0x08004740   0x00000020   Data   RO         6193    Region$$Table       anon$$obj.o
+    0x08004718   0x08004718   0x00000028   Data   RO         6277    .constdata          c_w.l(_printf_hex_ptr.o)
+    0x08004740   0x08004740   0x00000020   Data   RO         6499    Region$$Table       anon$$obj.o
 
 
     Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x08004760, Size: 0x000033b0, Max: 0x00010000, ABSOLUTE)
@@ -3996,7 +4139,7 @@ Memory Map of the image
     0x200004dc        -       0x00000028   Zero   RW         4946    .bss                timers.o
     0x20000504        -       0x00002800   Zero   RW         5488    .bss                heap_4.o
     0x20002d04        -       0x00000048   Zero   RW         5656    .bss                btim.o
-    0x20002d4c        -       0x00000060   Zero   RW         6076    .bss                c_w.l(libspace.o)
+    0x20002d4c        -       0x00000060   Zero   RW         6382    .bss                c_w.l(libspace.o)
     0x20002dac   0x0800480d   0x00000004   PAD
     0x20002db0        -       0x00000200   Zero   RW            2    HEAP                startup_stm32f103xe.o
     0x20002fb0        -       0x00000400   Zero   RW            1    STACK               startup_stm32f103xe.o

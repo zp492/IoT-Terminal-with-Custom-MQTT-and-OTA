@@ -100,18 +100,18 @@ extern "C" {
 #define SOCKERR_SOCKNUM       (SOCK_ERROR - 1)     ///< Invalid socket number
 #define SOCKERR_SOCKOPT       (SOCK_ERROR - 2)     ///< Invalid socket option
 #define SOCKERR_SOCKINIT      (SOCK_ERROR - 3)     ///< Socket is not initialized or SIPR is Zero IP address when Sn_MR_TCP
-#define SOCKERR_SOCKCLOSED    (SOCK_ERROR - 4)     ///< Socket unexpectedly closed.
-#define SOCKERR_SOCKMODE      (SOCK_ERROR - 5)     ///< Invalid socket mode for socket operation.
-#define SOCKERR_SOCKFLAG      (SOCK_ERROR - 6)     ///< Invalid socket flag
-#define SOCKERR_SOCKSTATUS    (SOCK_ERROR - 7)     ///< Invalid socket status for socket operation.
-#define SOCKERR_ARG           (SOCK_ERROR - 10)    ///< Invalid argument.
-#define SOCKERR_PORTZERO      (SOCK_ERROR - 11)    ///< Port number is zero
-#define SOCKERR_IPINVALID     (SOCK_ERROR - 12)    ///< Invalid IP address
-#define SOCKERR_TIMEOUT       (SOCK_ERROR - 13)    ///< Timeout occurred
-#define SOCKERR_DATALEN       (SOCK_ERROR - 14)    ///< Data length is zero or greater than buffer max size.
-#define SOCKERR_BUFFER        (SOCK_ERROR - 15)    ///< Socket buffer is not enough for data communication.
+#define SOCKERR_SOCKCLOSED    (SOCK_ERROR - 4)     ///< Socket unexpectedly closed.//无效的socket状态
+#define SOCKERR_SOCKMODE      (SOCK_ERROR - 5)     ///< Invalid socket mode for socket operation.//无效的socket模式
+#define SOCKERR_SOCKFLAG      (SOCK_ERROR - 6)     ///< Invalid socket flag.//无效的socket标志
+#define SOCKERR_SOCKSTATUS    (SOCK_ERROR - 7)     ///< Invalid socket status for socket operation.//无效的socket状态   
+#define SOCKERR_ARG           (SOCK_ERROR - 10)    ///< Invalid argument.//无效的参数
+#define SOCKERR_PORTZERO      (SOCK_ERROR - 11)    ///< Port number is zero.//无效的端口号
+#define SOCKERR_IPINVALID     (SOCK_ERROR - 12)    ///< Invalid IP address//无效的IP地址
+#define SOCKERR_TIMEOUT       (SOCK_ERROR - 13)    ///< Timeout occurred//超时发生
+#define SOCKERR_DATALEN       (SOCK_ERROR - 14)    ///< Data length is zero or greater than buffer max size.//数据长度为零或者大于缓冲区最大值
+#define SOCKERR_BUFFER        (SOCK_ERROR - 15)    ///< Socket buffer is not enough for data communication.//缓冲区不足
 
-#define SOCKFATAL_PACKLEN     (SOCK_FATAL - 1)     ///< Invalid packet length. Fatal Error.
+#define SOCKFATAL_PACKLEN     (SOCK_FATAL - 1)     ///< Invalid packet length. Fatal Error.//无效的数据包长度
 
 #if (_WIZCHIP_ == W5100 || _WIZCHIP_ == W5100S || _WIZCHIP_ == W5200 || _WIZCHIP_ == W5300 || _WIZCHIP_ == W5500)
 /*

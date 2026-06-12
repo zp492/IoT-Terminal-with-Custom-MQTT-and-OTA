@@ -50,6 +50,8 @@
 "..\..\output\led.o"
 "..\..\output\socket.o"
 "..\..\output\w5500.o"
+"..\..\output\spi.o"
+"..\..\output\wizchip_conf.o"
 --strict --scatter "..\..\Output\f103_zj.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

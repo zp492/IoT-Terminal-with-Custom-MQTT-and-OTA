@@ -361,21 +361,21 @@ typedef   int16_t   datasize_t;     ///< sent or received data size
     @brief The set of callback functions for W5500:@ref WIZCHIP_IO_Functions W5200:@ref WIZCHIP_IO_Functions_W5200
 */
 typedef struct __WIZCHIP {
-    uint16_t  if_mode;               ///< host interface mode
+    uint16_t  if_mode;               ///< host interface mode//主机接口模式
     uint8_t   id[8];                 ///< @b WIZCHIP ID such as @b 5100, @b 5100S, @b 5200, @b 5500, and so on.
     /**
         The set of critical section callback func.
     */
     struct _CRIS {
-        void (*_enter)  (void);       ///< crtical section enter
-        void (*_exit) (void);         ///< critial section exit
+        void (*_enter)  (void);       ///< crtical section enter//临界区进入
+        void (*_exit) (void);         ///< critial section exit//临界区退出
     } CRIS;
     /**
         The set of @ref \_WIZCHIP_ select control callback func.
     */
     struct _CS {
-        void (*_select)  (void);      ///< @ref \_WIZCHIP_ selected
-        void (*_deselect)(void);      ///< @ref \_WIZCHIP_ deselected
+        void (*_select)  (void);      ///< @ref \_WIZCHIP_ selected//片选
+        void (*_deselect)(void);      ///< @ref \_WIZCHIP_ deselected//取消片选
     } CS;
     /**
         The set of interface IO callback func.
@@ -391,12 +391,12 @@ typedef struct __WIZCHIP {
         //   void     (*_write_byte) (uint32_t AddrSel, uint8_t wb);
         //}BUS;
         struct {
-            iodata_t  (*_read_data)   (uint32_t AddrSel);
-            void      (*_write_data)  (uint32_t AddrSel, iodata_t wb);
+            iodata_t  (*_read_data)   (uint32_t AddrSel);//读取数据
+            void      (*_write_data)  (uint32_t AddrSel, iodata_t wb);//写入数据
 #if 1
             // 20231103 taylor
-            void      (*_read_data_buf)  (uint32_t AddrSel, iodata_t* pBuf, int16_t len, uint8_t addrinc);  ///< Read @ref iodata_t as many as <i>len</i> from @ref _WIZCHIP_ through BUS
-            void      (*_write_data_buf) (uint32_t AddrSel, iodata_t* pBuf, int16_t len, uint8_t addrinc);  ///< Write @ref iodata_t data as many as <i>len</i> to @ref _WIZCHIP_ through BUS
+            void      (*_read_data_buf)  (uint32_t AddrSel, iodata_t* pBuf, int16_t len, uint8_t addrinc);  ///< Read @ref iodata_t as many as <i>len</i> from @ref _WIZCHIP_ through BUS//通过BUS读取数据缓冲区
+            void      (*_write_data_buf) (uint32_t AddrSel, iodata_t* pBuf, int16_t len, uint8_t addrinc);  ///< Write @ref iodata_t data as many as <i>len</i> to @ref _WIZCHIP_ through BUS//通过BUS写入数据缓冲区
 #endif
         } BUS;
 

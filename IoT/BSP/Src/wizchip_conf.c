@@ -291,8 +291,8 @@ void reg_wizchip_cris_cbfunc(void(*cris_en)(void), void(*cris_ex)(void)) {
         WIZCHIP.CRIS._enter = wizchip_cris_enter;
         WIZCHIP.CRIS._exit  = wizchip_cris_exit;
     } else {
-        WIZCHIP.CRIS._enter = cris_en;
-        WIZCHIP.CRIS._exit  = cris_ex;
+        WIZCHIP.CRIS._enter = cris_en;//临界区进入
+        WIZCHIP.CRIS._exit  = cris_ex;//临界区退出
     }
 }
 
@@ -301,8 +301,8 @@ void reg_wizchip_cs_cbfunc(void(*cs_sel)(void), void(*cs_desel)(void)) {
         WIZCHIP.CS._select   = wizchip_cs_select;
         WIZCHIP.CS._deselect = wizchip_cs_deselect;
     } else {
-        WIZCHIP.CS._select   = cs_sel;
-        WIZCHIP.CS._deselect = cs_desel;
+        WIZCHIP.CS._select   = cs_sel;//片选
+        WIZCHIP.CS._deselect = cs_desel;//取消片选
     }
 }
 
@@ -327,8 +327,8 @@ void reg_wizchip_bus_cbfunc(iodata_t(*bus_rb)(uint32_t addr), void (*bus_wb)(uin
         WIZCHIP.IF.BUS._read_data   = wizchip_bus_readdata;
         WIZCHIP.IF.BUS._write_data  = wizchip_bus_writedata;
     } else {
-        WIZCHIP.IF.BUS._read_data   = bus_rb;
-        WIZCHIP.IF.BUS._write_data  = bus_wb;
+        WIZCHIP.IF.BUS._read_data   = bus_rb;//通过BUS读取数据
+        WIZCHIP.IF.BUS._write_data  = bus_wb;//通过BUS写入数据
     }
 }
 #if 1
@@ -352,8 +352,8 @@ void reg_wizchip_busbuf_cbfunc(void(*busbuf_rb)(uint32_t AddrSel, iodata_t* pBuf
         WIZCHIP.IF.BUS._read_data_buf   = wizchip_bus_read_buf;
         WIZCHIP.IF.BUS._write_data_buf  = wizchip_bus_write_buf;
     } else {
-        WIZCHIP.IF.BUS._read_data_buf   = busbuf_rb;
-        WIZCHIP.IF.BUS._write_data_buf  = busbuf_wb;
+        WIZCHIP.IF.BUS._read_data_buf   = busbuf_rb;//通过BUS读取数据缓冲区
+        WIZCHIP.IF.BUS._write_data_buf  = busbuf_wb;//通过BUS写入数据缓冲区
     }
 }
 #endif
@@ -397,8 +397,8 @@ void reg_wizchip_spi_cbfunc(uint8_t (*spi_rb)(void), void (*spi_wb)(uint8_t wb))
         WIZCHIP.IF.SPI._read_byte   = wizchip_spi_readbyte;
         WIZCHIP.IF.SPI._write_byte  = wizchip_spi_writebyte;
     } else {
-        WIZCHIP.IF.SPI._read_byte   = spi_rb;
-        WIZCHIP.IF.SPI._write_byte  = spi_wb;
+        WIZCHIP.IF.SPI._read_byte   = spi_rb;//通过SPI读取数据
+        WIZCHIP.IF.SPI._write_byte  = spi_wb;//通过SPI写入数据
     }
 }
 #endif
@@ -411,8 +411,8 @@ void reg_wizchip_spiburst_cbfunc(void (*spi_rb)(uint8_t* pBuf, uint16_t len), vo
         WIZCHIP.IF.SPI._read_burst   = wizchip_spi_readburst;
         WIZCHIP.IF.SPI._write_burst  = wizchip_spi_writeburst;
     } else {
-        WIZCHIP.IF.SPI._read_burst   = spi_rb;
-        WIZCHIP.IF.SPI._write_burst  = spi_wb;
+        WIZCHIP.IF.SPI._read_burst   = spi_rb;//通过SPI读取数据
+        WIZCHIP.IF.SPI._write_burst  = spi_wb;//通过SPI写入数据
     }
 }
 #if 1 //teddy 240122
@@ -424,8 +424,8 @@ void reg_wizchip_qspi_cbfunc(void (*qspi_rb)(uint8_t opcode, uint16_t addr, uint
         WIZCHIP.IF.QSPI._read_qspi   = wizchip_qspi_read;
         WIZCHIP.IF.QSPI._write_qspi  = wizchip_qspi_write;
     } else {
-        WIZCHIP.IF.QSPI._read_qspi   = qspi_rb;
-        WIZCHIP.IF.QSPI._write_qspi  = qspi_wb;
+        WIZCHIP.IF.QSPI._read_qspi   = qspi_rb;//通过QSPI读取数据
+        WIZCHIP.IF.QSPI._write_qspi  = qspi_wb;//通过QSPI写入数据
     }
 }
 #endif

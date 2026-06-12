@@ -669,6 +669,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\w5500.c</FilePath>
             </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>wizchip_conf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\wizchip_conf.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
