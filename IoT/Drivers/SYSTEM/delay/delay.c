@@ -1,25 +1,34 @@
 /**
  ****************************************************************************************************
  * @file        delay.c
- * @author      正点原子团队(ALIENTEK)
- * @version     V1.0
- * @date        2020-04-17
- * @brief       使用SysTick的普通计数模式对延迟进行管理(支持ucosii)
- *              提供delay_init初始化函数， delay_us和delay_ms等延时函数
- * @license     Copyright (c) 2020-2032, 广州市星翼电子科技有限公司
- ****************************************************************************************************
- * @attention
+ * @version     V2.0
+ * @date        2026-06-12
+ * @brief       SysTick延时模块(支持裸机和FreeRTOS双模式)
+ * @details     提供微秒/毫秒级延时函数, 包括:
+ *              - delay_init()   : 初始化SysTick, 计算时基倍乘数
+ *              - delay_us()     : 微秒延时 (OS: 软轮询 / 裸机: 硬件倒计时)
+ *              - delay_ms()     : 毫秒延时 (OS: 单次轮询累加 / 裸机: 分块倒计时)
+ *              - HAL_Delay()    : HAL库内部延时适配 (仅裸机模式)
  *
- * 实验平台:正点原子 STM32F103开发板
- * 在线视频:www.yuanzige.com
- * 技术论坛:www.openedv.com
- * 公司网址:www.alientek.com
- * 购买地址:openedv.taobao.com
+ * @note        硬件平台: 正点原子 STM32F103ZET6 开发板
+ *              - MCU:    STM32F103ZET6 (Cortex-M3, 72MHz主频)
+ *              - 时钟源: SYSTICK使用内核时钟源8分频 (HCLK/8)
+ *              - 计数器: 24位递减计数器, 最大值16,777,216
  *
- * 修改说明
- * V1.0 20211103
- * 第一次发布
+ * @note        OS模式 (SYS_SUPPORT_OS=1):
+ *              - SysTick用作FreeRTOS心跳, 中断周期 = 1 / configTICK_RATE_HZ
+ *              - delay_us/delay_ms 通过读取 SysTick->VAL 当前值进行软轮询累加
+ *              - 延时期间不关调度, 可被高优先级任务抢占
  *
+ * @note        裸机模式 (SYS_SUPPORT_OS=0):
+ *              - SysTick仅用于延时, 不开启中断
+ *              - delay_us 直接设置LOAD值硬件倒计时, 受24位寄存器限制
+ *              - delay_ms 按1000ms分块调用delay_us, 兼容超频场景(如128MHz)
+ *
+ * @note        修改历史
+ *              V1.0 20200417  正点原子团队: 第一次发布, 原始版本
+ *              V2.0 20260612  zp492: 优化OS版delay_ms(循环调用→单次轮询累加)
+ *                                    合并delay_init中重复的#if块
  ****************************************************************************************************
  */
 
@@ -59,24 +68,24 @@ void SysTick_Handler(void)
  */
 void delay_init(uint16_t sysclk)
 {
-#if SYS_SUPPORT_OS /* 如果需要支持OS. */
-    uint32_t reload;
-#endif
     SysTick->CTRL = 0;                                        /* 清Systick状态，以便下一步重设，如果这里开了中断会关闭其中断 */
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8); /* SYSTICK使用内核时钟源8分频,产生1ms的基准，因systick的计数器最大值只有2^24 */
 
     g_fac_us = sysclk / 8; /* 不论是否使用OS,g_fac_us都需要使用,作为1us的基础时基 */
 #if SYS_SUPPORT_OS         /* 如果需要支持OS. */
-    reload = sysclk / 8;   /* 每秒钟的计数次数 单位为M */
-    /* 使用 configTICK_RATE_HZ 计算重装载值
-     * configTICK_RATE_HZ 在 FreeRTOSConfig.h 中定义
-     */
-    reload *= 1000000 / configTICK_RATE_HZ; /* 根据delay_ostickspersec设定溢出时间
-                                             * reload为24位寄存器,最大值:16777216,在9M下,约合1.86s左右
-                                             */
-    SysTick->CTRL |= 1 << 1;                /* 开启SYSTICK中断 */
-    SysTick->LOAD = reload;                 /* 每1/delay_ostickspersec秒中断一次 */
-    SysTick->CTRL |= 1 << 0;                /* 开启SYSTICK */
+    {
+        /* 优化：将reload声明与使用合并到同一个#if块内，用{}限定作用域 */
+        uint32_t reload = sysclk / 8;   /* 每秒钟的计数次数 单位为M */
+        /* 使用 configTICK_RATE_HZ 计算重装载值
+         * configTICK_RATE_HZ 在 FreeRTOSConfig.h 中定义
+         */
+        reload *= 1000000 / configTICK_RATE_HZ; /* 根据delay_ostickspersec设定溢出时间
+                                                 * reload为24位寄存器,最大值:16777216,在9M下,约合1.86s左右
+                                                 */
+        SysTick->CTRL |= 1 << 1;                /* 开启SYSTICK中断 */
+        SysTick->LOAD = reload;                 /* 每1/delay_ostickspersec秒中断一次 */
+        SysTick->CTRL |= 1 << 0;                /* 开启SYSTICK */
+    }
 #endif
 }
 
@@ -130,10 +139,36 @@ void delay_us(uint32_t nus)
  */
 void delay_ms(uint16_t nms)
 {
-    uint32_t i;
-    for (i = 0; i < nms; i++)
+    /*
+     * 优化说明：
+     * 原实现为 for(i=0;i<nms;i++) delay_us(1000)，每次调用 delay_us
+     * 都要重新读取 SysTick->LOAD、初始化局部变量、进入独立轮询循环。
+     * 以500ms延时为例，需要500次函数调用，开销随延时时长线性增长。
+     *
+     * 优化后直接在此函数内完成 SysTick 轮询累加，一次完成整个 ms 延时，
+     * 无论延时多长都只有一次函数调用和一次轮询循环，显著减少 CPU 开销。
+     */
+    uint32_t ticks;
+    uint32_t told, tnow, tcnt = 0;/*进入值、当前值、差值*/
+    uint32_t reload = SysTick->LOAD;    /* 读取重装载值，用于计数器溢出判断 */
+
+    ticks = nms * g_fac_us * 1000;      /* 需要的节拍数 = ms * 每us节拍数 * 1000 */
+    told = SysTick->VAL;                
+
+    while (1)
     {
-        delay_us(1000);
+        tnow = SysTick->VAL;            
+        if (tnow != told)               /* 计数器有变化才计算，避免空转 */
+        {
+            /* SysTick是递减计数器：tnow < told 说明未溢出，差值直接累加 */
+            if (tnow < told)
+                tcnt += told - tnow;
+            /* tnow > told 说明计数器溢出重载，累加溢出前后的两段差值 */
+            else
+                tcnt += reload - tnow + told;
+            told = tnow;
+            if (tcnt >= ticks) break;    /* 累加节拍数达到目标，退出 */
+        }
     }
 }
 

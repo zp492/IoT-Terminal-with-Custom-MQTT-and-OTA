@@ -60,7 +60,7 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
 I (..\..\Core\Inc\stm32f1xx_it.h)(0x60F4DDFA)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 F (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Source\Templates\system_stm32f1xx.c)(0x60F4DDFA)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\system_stm32f1xx.o --omf_browse ..\..\output\system_stm32f1xx.crf --depend ..\..\output\system_stm32f1xx.d)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
@@ -119,8 +119,8 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_usb.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
-F (..\..\Core\Src\main.c)(0x6A2AA713)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\main.o --omf_browse ..\..\output\main.crf --depend ..\..\output\main.d)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+F (..\..\Core\Src\main.c)(0x6A2C1B0D)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\main.o --omf_browse ..\..\output\main.crf --depend ..\..\output\main.d)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -185,11 +185,14 @@ I (..\..\BSP\Inc\led.h)(0x6A0ED751)
 I (..\..\BSP\Inc\key.h)(0x6A11A73C)
 I (..\..\Middlewares\./MALLOC/malloc.h)(0x638D6A06)
 I (..\..\Core\Inc\freertos_demo.h)(0x6A16C6EA)
-F (..\..\Core\Src\freertos_demo.c)(0x6A2AA713)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\freertos_demo.o --omf_browse ..\..\output\freertos_demo.crf --depend ..\..\output\freertos_demo.d)
+I (..\..\BSP\Inc\w5500_port.h)(0x6A2C109C)
+I (..\..\BSP\Inc\wizchip_conf.h)(0x6A2AB53F)
+I (..\..\BSP\Inc\w5500.h)(0x6A27C859)
+F (..\..\Core\Src\freertos_demo.c)(0x6A2C205E)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\freertos_demo.o --omf_browse ..\..\output\freertos_demo.crf --depend ..\..\output\freertos_demo.d)
 I (..\..\Core\Inc\freertos_demo.h)(0x6A16C6EA)
 I (..\..\Drivers\./SYSTEM/usart/usart.h)(0x61825C6C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x67D28AEC)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -262,8 +265,83 @@ I (..\..\FreeRTOS\include\task.h)(0x6A045874)
 I (..\..\FreeRTOS\include\list.h)(0x6A045874)
 I (..\..\FreeRTOS\include\queue.h)(0x6A045874)
 I (..\..\FreeRTOS\include\semphr.h)(0x6A045874)
-F (..\..\Drivers\SYSTEM\delay\delay.c)(0x6A2C02E1)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\delay.o --omf_browse ..\..\output\delay.crf --depend ..\..\output\delay.d)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+F (..\..\BSP\Src\w5500_port.c)(0x6A2C145F)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\w5500_port.o --omf_browse ..\..\output\w5500_port.crf --depend ..\..\output\w5500_port.d)
+I (..\..\BSP\Inc\w5500_port.h)(0x6A2C109C)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
+I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
+I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
+I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
+I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
+I (..\..\Drivers\CMSIS\Include\cmsis_version.h)(0x60F4DDFA)
+I (..\..\Drivers\CMSIS\Include\cmsis_compiler.h)(0x60F4DDFA)
+I (..\..\Drivers\CMSIS\Include\cmsis_armcc.h)(0x60F4DDFA)
+I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\system_stm32f1xx.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h)(0x60F4DDFA)
+I (..\..\Core\Inc\stm32f1xx_hal_conf.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_def.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\Legacy/stm32_hal_legacy.h)(0x60F4DDFA)
+I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_gpio.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_gpio_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_exti.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_dma.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_dma_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_eth.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_can.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_cec.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_cortex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_adc.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_adc_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_crc.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_dac.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_dac_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_flash.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_flash_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_sram.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_fsmc.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_nor.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_i2c.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_i2s.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_iwdg.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pwr.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rtc.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rtc_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pccard.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_sd.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_sdmmc.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_nand.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_spi.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_uart.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_usart.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_irda.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_smartcard.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_wwdg.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_usb.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDFA)
+I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
+I (..\..\BSP\Inc\wizchip_conf.h)(0x6A2AB53F)
+I (..\..\BSP\Inc\w5500.h)(0x6A27C859)
+I (..\..\BSP\Inc\spi.h)(0x6A2C1073)
+I (..\..\Drivers\./SYSTEM/delay/delay.h)(0x6182666A)
+I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
+I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
+I (..\..\Drivers\./SYSTEM/usart/usart.h)(0x61825C6C)
+I (E:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x67D28AEC)
+I (..\..\FreeRTOS\include\projdefs.h)(0x6A045874)
+I (..\..\FreeRTOS\include\portable.h)(0x6A045874)
+I (..\..\FreeRTOS\include\deprecated_definitions.h)(0x6A045873)
+I (..\..\FreeRTOS\portable\RVDS\ARM_CM3\portmacro.h)(0x6A045873)
+I (..\..\FreeRTOS\include\mpu_wrappers.h)(0x6A045874)
+I (..\..\FreeRTOS\include\task.h)(0x6A045874)
+I (..\..\FreeRTOS\include\list.h)(0x6A045874)
+F (..\..\Drivers\SYSTEM\delay\delay.c)(0x6A2C0C98)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\delay.o --omf_browse ..\..\output\delay.crf --depend ..\..\output\delay.d)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -333,8 +411,8 @@ I (..\..\FreeRTOS\portable\RVDS\ARM_CM3\portmacro.h)(0x6A045873)
 I (..\..\FreeRTOS\include\mpu_wrappers.h)(0x6A045874)
 I (..\..\FreeRTOS\include\task.h)(0x6A045874)
 I (..\..\FreeRTOS\include\list.h)(0x6A045874)
-F (..\..\Drivers\SYSTEM\sys\sys.c)(0x63525E30)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\sys.o --omf_browse ..\..\output\sys.crf --depend ..\..\output\sys.d)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+F (..\..\Drivers\SYSTEM\sys\sys.c)(0x6A2C18B1)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\sys.o --omf_browse ..\..\output\sys.crf --depend ..\..\output\sys.d)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -392,8 +470,8 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_usb.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
-F (..\..\Drivers\SYSTEM\usart\usart.c)(0x6A0583CE)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\usart.o --omf_browse ..\..\output\usart.crf --depend ..\..\output\usart.d)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+F (..\..\Drivers\SYSTEM\usart\usart.c)(0x6A2C0BC7)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\usart.o --omf_browse ..\..\output\usart.crf --depend ..\..\output\usart.d)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -1629,7 +1707,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -1703,7 +1781,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -1775,7 +1853,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -1847,7 +1925,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -1919,7 +1997,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -1992,7 +2070,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -2062,7 +2140,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -2135,7 +2213,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -2205,7 +2283,7 @@ I (..\..\FreeRTOS\include\FreeRTOS.h)(0x6A045874)
 I (E:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599ECD2C)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\Core\Inc\FreeRTOSConfig.h)(0x6A17052C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -2331,7 +2409,7 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
 F (..\..\BSP\Src\key.c)(0x6A2AA589)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\key.o --omf_browse ..\..\output\key.crf --depend ..\..\output\key.d)
 I (..\..\BSP\Inc\key.h)(0x6A11A73C)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -2392,7 +2470,7 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
 I (..\..\Drivers\./SYSTEM/delay/delay.h)(0x6182666A)
 F (..\..\BSP\Src\led.c)(0x6A2AA713)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\led.o --omf_browse ..\..\output\led.crf --depend ..\..\output\led.d)
 I (..\..\BSP\Inc\led.h)(0x6A0ED751)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)
@@ -2450,8 +2528,8 @@ I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_ll_usb.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h)(0x60F4DDFA)
 I (..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h)(0x60F4DDFA)
-F (..\..\BSP\Src\socket.c)(0x6A2AAC9B)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\socket.o --omf_browse ..\..\output\socket.crf --depend ..\..\output\socket.d)
-I (..\..\BSP\Inc\socket.h)(0x6A27C859)
+F (..\..\BSP\Src\socket.c)(0x6A2AAC9B)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP --diag_suppress=177,550-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\socket.o --omf_browse ..\..\output\socket.crf --depend ..\..\output\socket.d)
+I (..\..\BSP\Inc\socket.h)(0x6A2C1614)
 I (..\..\BSP\Inc\wizchip_conf.h)(0x6A2AB53F)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\BSP\Inc\w5500.h)(0x6A27C859)
@@ -2459,9 +2537,9 @@ F (..\..\BSP\Src\w5500.c)(0x6A2AB430)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=int
 I (..\..\BSP\Inc\w5500.h)(0x6A27C859)
 I (E:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x67A49912)
 I (..\..\BSP\Inc\wizchip_conf.h)(0x6A2AB53F)
-F (..\..\BSP\Src\spi.c)(0x6A2BEC7C)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\spi.o --omf_browse ..\..\output\spi.crf --depend ..\..\output\spi.d)
-I (..\..\BSP\Inc\spi.h)(0x6A2BE9BD)
-I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A0474A0)
+F (..\..\BSP\Src\spi.c)(0x6A2C108D)(--c99 -c --cpu Cortex-M3 -g -O0 --apcs=interwork --split_sections -I ..\..\Drivers\STM32F1xx_HAL_Driver\Inc -I ..\..\Drivers\CMSIS\Include -I ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include -I ..\..\FreeRTOS\include -I ..\..\Drivers -I ..\..\Core\Inc -I ..\..\BSP\Inc -I ..\..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\..\Core -I ..\..\Middlewares -I ..\..\BSP-IE:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="539" -DSTM32F10X_HD -DSTM32F103xE -DUSE_HAL_DRIVER-o ..\..\output\spi.o --omf_browse ..\..\output\spi.crf --depend ..\..\output\spi.d)
+I (..\..\BSP\Inc\spi.h)(0x6A2C1073)
+I (..\..\Drivers\./SYSTEM/sys/sys.h)(0x6A2C0A9D)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h)(0x60F4DDFA)
 I (..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f103xe.h)(0x6A05890A)
 I (..\..\Drivers\CMSIS\Include\core_cm3.h)(0x60F4DDFA)

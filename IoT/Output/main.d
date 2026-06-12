@@ -65,3 +65,7 @@
 ..\..\output\main.o: ..\..\BSP\Inc\key.h
 ..\..\output\main.o: ..\..\Middlewares\./MALLOC/malloc.h
 ..\..\output\main.o: ..\..\Core\Inc\freertos_demo.h
+..\..\output\main.o: ..\..\BSP\Inc\w5500_port.h
+..\..\output\main.o: ..\..\BSP\Inc\wizchip_conf.h
+..\..\output\main.o: ..\..\BSP\Inc\w5500.h
+..\..\output\main.o: ..\..\BSP\Inc\wizchip_conf.h

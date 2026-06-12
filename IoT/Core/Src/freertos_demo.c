@@ -74,36 +74,8 @@ void start_task(void *pvParameters)
     taskEXIT_CRITICAL(); // 退出临界区
 }
 
-/*任务1 申请内存、释放内存，并显示空闲内存*/
 void task1(void *pvParameters)
 {
-    uint8_t key = 0, t = 0;
-    uint8_t *p = NULL;
-    while (1)
-    {
-        key = key_scan(0);
-        if (key == KEY0_PRES)
-        {
-            p = pvPortMalloc(20);
-            if (p != NULL)
-            {
-                printf("Malloc Success: %p\r\n", p);
-            }
-        }
-        else if (key == KEY1_PRES)
-        {
-            if (p != NULL)
-            {
-                vPortFree(p);
-                p = NULL;
-            }
-        }
-        t++;
-        if (t > 50)
-        {
-            t = 0;
-            printf("Free Memory: %d\r\n", xPortGetFreeHeapSize());
-        }
-        vTaskDelay(10); /*任务延时, 让出CPU*/
-    }
+ 
+  
 }

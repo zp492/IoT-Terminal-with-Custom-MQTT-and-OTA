@@ -4,6 +4,7 @@
 "..\..\output\system_stm32f1xx.o"
 "..\..\output\main.o"
 "..\..\output\freertos_demo.o"
+"..\..\output\w5500_port.o"
 "..\..\output\delay.o"
 "..\..\output\sys.o"
 "..\..\output\usart.o"
