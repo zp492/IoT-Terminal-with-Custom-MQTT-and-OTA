@@ -410,14 +410,14 @@
               <FilePath>..\..\Core\Src\main.c</FilePath>
             </File>
             <File>
-              <FileName>freertos_demo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Core\Src\freertos_demo.c</FilePath>
-            </File>
-            <File>
               <FileName>w5500_port.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\w5500_port.c</FilePath>
+            </File>
+            <File>
+              <FileName>freertos_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Core\Src\freertos_task.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -734,6 +734,11 @@
               <FileName>wizchip_conf.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\wizchip_conf.c</FilePath>
+            </File>
+            <File>
+              <FileName>tcp_client.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\tcp_client.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -19,7 +19,7 @@ SPI_HandleTypeDef g_spi_handle;    /* SPI2句柄, 全局变量 */
 /**
  * @brief       SPI2初始化 (W5500专用)
  * @note        SPI模式0 (CPOL=0, CPHA=0), 与W5500要求一致
- *              W5500最高SPI时钟80MHz, F103主频72MHz, 分频后最高36MHz安全可用
+ *              W5500最高SPI时钟80MHz, SPI2挂APB1(PCLK1=36MHz), 分频后最高18MHz
  */
 void spi2_init(void)
 {
@@ -108,10 +108,10 @@ uint8_t spi2_write_read_byte(uint8_t data)
 /**
  * @brief       设置SPI2速度
  * @param       speed: 预分频值, 使用 SPI_SPEED_2 ~ SPI_SPEED_256 宏
- * @note        F103 SPI2时钟源 = PCLK1 = 36MHz (APB1, 72MHz/2)
+ * @note        F103 SPI2时钟源 = PCLK1 = 36MHz (APB1, SYSCLK/2)
  *              SPI_SCK = PCLK1 / (2 << speed)
- *              例如: speed=SPI_SPEED_2 → SPI_SCK = 36 / 4 = 9MHz
- *              W5500 SPI最大时钟80MHz, F103下最高安全选36MHz (SPI_SPEED_2)
+ *              例如: speed=SPI_SPEED_2 (=0) → SPI_SCK = 36 / 2 = 18MHz
+ *              W5500 SPI最大时钟80MHz, F103下SPI2最高18MHz (SPI_SPEED_2)
  */
 void spi2_set_speed(uint8_t speed)
 {

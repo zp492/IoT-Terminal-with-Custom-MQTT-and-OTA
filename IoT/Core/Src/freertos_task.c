@@ -1,9 +1,10 @@
-#include "freertos_demo.h"
+#include "freertos_task.h"
 #include "./SYSTEM/usart/usart.h"
 #include "./SYSTEM/delay/delay.h"
 #include "led.h"
 #include "key.h"
 #include "./MALLOC/malloc.h"
+#include "tcp_client.h"
 /*FreeRTOS*********************************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
@@ -20,29 +21,12 @@
 void start_task(void *pvParameters);
 TaskHandle_t start_task_handler;
 
-/* TASK1 任务 配置
- * 包括: 堆栈大小 任务优先级 创建任务 任务句柄
+/* TCP_CLIENT 任务 配置
+ * 堆栈 512 words (2KB) — TCP socket 收发需要较大栈空间
  */
-#define TASK1_STACK_SIZE 128
-#define TASK1_TSAK_PROI 2
-void task1(void *pvParameters);
-TaskHandle_t task1_handler;
-
-///* TASK2 任务 配置
-// * 包括: 堆栈大小 任务优先级 创建任务 任务句柄
-// */
-// #define TASK2_STACK_SIZE 128
-// #define TASK2_TSAK_PROI 3
-// void task2(void *pvParameters);
-// TaskHandle_t task2_handler;
-
-///* TASK3 任务 配置
-// * 包括: 堆栈大小 任务优先级 创建任务 任务句柄
-// */
-// #define TASK3_STACK_SIZE 128
-// #define TASK3_TSAK_PROI 4
-// void task3(void *pvParameters);
-// TaskHandle_t task3_handler;
+#define TCP_CLIENT_STACK_SIZE 512
+#define TCP_CLIENT_TSAK_PROI  2
+TaskHandle_t tcp_client_task_handler;
 
 /**
  * @brief       FreeRTOS例程入口函数
@@ -64,18 +48,21 @@ void freertos_demo(void)
 void start_task(void *pvParameters)
 {
     taskENTER_CRITICAL(); // 进入临界区
-    xTaskCreate(task1,
-                "task1",
-                TASK1_STACK_SIZE,
+    xTaskCreate(tcp_client_task,
+                "tcp_client",
+                TCP_CLIENT_STACK_SIZE,
                 NULL,
-                TASK1_TSAK_PROI,
-                &task1_handler);
+                TCP_CLIENT_TSAK_PROI,
+                &tcp_client_task_handler);
     vTaskDelete(NULL);
     taskEXIT_CRITICAL(); // 退出临界区
 }
 
-void task1(void *pvParameters)
+/**
+ * @brief       TCP 客户端任务 (FreeRTOS 任务入口)
+ * @note        薄包装, 实际逻辑在 tcp_client_run() 中
+ */
+void tcp_client_task(void *pvParameters)
 {
- 
-  
+    tcp_client_run(pvParameters);
 }

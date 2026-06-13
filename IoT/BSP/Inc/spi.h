@@ -5,16 +5,17 @@
 
 /* ================================================================================
  * SPI总线速度设置 (预分频系数)
- * 72MHz / (2 << speed) = SPI时钟频率
+ * SPI2挂载APB1 → PCLK1 = 36MHz (F103非互联型限制)
+ * SPI_SCK = PCLK1 / (2 << speed)
  * ================================================================================ */
-#define SPI_SPEED_2     0   /* 72 / 2  = 36MHz  */
-#define SPI_SPEED_4     1   /* 72 / 4  = 18MHz  */
-#define SPI_SPEED_8     2   /* 72 / 8  = 9MHz   */
-#define SPI_SPEED_16    3   /* 72 / 16 = 4.5MHz */
-#define SPI_SPEED_32    4   /* 72 / 32 = 2.25MHz*/
-#define SPI_SPEED_64    5   /* 72 / 64 = 1.125MHz*/
-#define SPI_SPEED_128   6   /* 72 / 128= 562KHz */
-#define SPI_SPEED_256   7   /* 72 / 256= 281KHz */
+#define SPI_SPEED_2     0   /* 36 / 2  = 18MHz   */
+#define SPI_SPEED_4     1   /* 36 / 4  = 9MHz    */
+#define SPI_SPEED_8     2   /* 36 / 8  = 4.5MHz  */
+#define SPI_SPEED_16    3   /* 36 / 16 = 2.25MHz */
+#define SPI_SPEED_32    4   /* 36 / 32 = 1.125MHz*/
+#define SPI_SPEED_64    5   /* 36 / 64 = 562KHz  */
+#define SPI_SPEED_128   6   /* 36 / 128= 281KHz  */
+#define SPI_SPEED_256   7   /* 36 / 256= 140KHz  */
 
 /* ================================================================================
  * W5500 硬件引脚定义 (正点原子 STM32F103ZET6 + W5500模块)

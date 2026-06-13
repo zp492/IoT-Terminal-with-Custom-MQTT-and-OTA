@@ -12,7 +12,11 @@
  *              WIZnet官方库(WIZCHIP_READ/WRITE) → w5500.c → WIZCHIP.IF.SPI._xxx → 本文件的回调
  *              → spi2_write_read_byte / HAL_SPI → W5500芯片
  *
- * @note        硬件平台: 正点原子 STM32F103ZET6 + W5500模块
+ *              硬件平台: 正点原子 STM32F103ZET6 + W5500模块
+ *              修改历史：
+ *              v1.0  2026-06-10  初始版本, 实现W5500端口层功能
+ *              v1.1  2026-06-12  优化SPI块读写函数, 提高效率 (减少片选/地址开销)
+ *              v1.2  2026-06-13  增加从STM32唯一ID派生MAC地址的功能
  ****************************************************************************************************
  */
 
@@ -169,6 +173,37 @@ void w5500_hardware_reset(void)
 }
 
 /* ================================================================================
+ * MAC地址生成 (来自STM32唯一ID)
+ * ================================================================================ */
+
+/**
+ * @brief       从STM32F103出厂唯一ID(96位)派生MAC地址
+ * @param       mac[6]: 输出的MAC地址
+ * @note        MAC格式: 00:08:DC (WIZnet OUI) + UID派生低24位
+ *              每块MCU的唯一ID不同, 因此每台设备的MAC自动唯一
+ */
+static void w5500_get_mac_from_uid(uint8_t mac[6])
+{
+    uint32_t uid[3];
+
+    /* STM32F103 96位唯一ID基地址: 0x1FFFF7E8 */
+    uid[0] = *(volatile uint32_t *)0x1FFFF7E8;
+    uid[1] = *(volatile uint32_t *)0x1FFFF7EC;
+    uid[2] = *(volatile uint32_t *)0x1FFFF7F0;
+
+    /* WIZnet OUI: 00:08:DC (标识为W5500/WIZnet设备) */
+    mac[0] = 0x00;
+    mac[1] = 0x08;
+    mac[2] = 0xDC;
+
+    /* 用3个32位UID XOR, 取低24位作为设备唯一标识 */
+    uint32_t unique = uid[0] ^ uid[1] ^ uid[2];
+    mac[3] = (uint8_t)(unique >> 16);
+    mac[4] = (uint8_t)(unique >> 8);
+    mac[5] = (uint8_t)(unique);
+}
+
+/* ================================================================================
  * W5500 完整初始化
  * ================================================================================ */
 
@@ -224,14 +259,9 @@ uint8_t w5500_init(void)
     }
 
     /* ----- 第5步: 设置网络信息 ----- */
-    net_info.mac[0] = 0x00;
-    net_info.mac[1] = 0x08;
-    net_info.mac[2] = 0xDC;
-    net_info.mac[3] = 0x12;
-    net_info.mac[4] = 0x34;
-    net_info.mac[5] = 0x56;                             /* MAC: 00:08:DC:12:34:56 */
+    w5500_get_mac_from_uid(net_info.mac);                   /* MAC: 由STM32唯一ID自动生成 */
     net_info.ip[0]  = 192; net_info.ip[1]  = 168;
-    net_info.ip[2]  = 1;   net_info.ip[3]  = 100;       /* IP:  192.168.1.100 */
+    net_info.ip[2]  = 1;   net_info.ip[3]  = 200;       /* IP:  192.168.1.200 */
     net_info.sn[0]  = 255; net_info.sn[1]  = 255;
     net_info.sn[2]  = 255; net_info.sn[3]  = 0;         /* SN:  255.255.255.0 */
     net_info.gw[0]  = 192; net_info.gw[1]  = 168;
@@ -250,10 +280,11 @@ uint8_t w5500_init(void)
     wizphy_setphyconf(&phy_conf);
 
     /* ----- 第7步: 切换SPI到高速 ----- */
-    /* W5500最大SPI时钟80MHz, F103最高36MHz (APB1=36MHz, 分频/2 → 18MHz或不分频→36MHz)
-     * SPI_SPEED_2: PCLK1/4 = 36MHz/4 = 9MHz, 稳定可靠
-     * SPI_SPEED_4: PCLK1/8 = 36MHz/8 = 4.5MHz, 更保守
-     * 建议先以SPI_SPEED_2(9MHz)运行, 如果通信不稳定则降低 */
+    /* SPI2挂载APB1(PCLK1=36MHz), SPI_SCK = PCLK1 / (2 << speed):
+     * SPI_SPEED_2 (speed=0): PCLK1/2 = 18MHz, 高速稳定
+     * SPI_SPEED_4 (speed=1): PCLK1/4 = 9MHz,  均衡可靠
+     * SPI_SPEED_8 (speed=2): PCLK1/8 = 4.5MHz, 保守兼容
+     * W5500最大SPI时钟80MHz, F103下SPI2最高18MHz, 选用18MHz */
     spi2_set_speed(SPI_SPEED_2);
 
     /* ----- 第8步: 等待PHY Link Up (超时5秒) ----- */

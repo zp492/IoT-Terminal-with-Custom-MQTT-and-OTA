@@ -2,10 +2,6 @@
  ****************************************************************************************************
  * @file        main.c
  * @brief       FreeRTOS + W5500 以太网实验
- * @note        启动流程:
- *              HAL_Init → 时钟72MHz → 延时 → 串口 → LED → 按键 → W5500 → FreeRTOS
- *              其中W5500初始化包含: SPI2 → 注册回调 → 硬件复位 → 芯片初始化 →
- *              网络配置 → PHY自动协商 → SPI调速 → 等待Link Up
  ****************************************************************************************************
  */
 
@@ -15,8 +11,9 @@
 #include "led.h"
 #include "key.h"
 #include "./MALLOC/malloc.h"
-#include "freertos_demo.h"
+#include "freertos_task.h"
 #include "w5500_port.h"
+#include "tcp_client.h"
 
 int main(void)
 {
@@ -35,7 +32,7 @@ int main(void)
     if (w5500_ret == 0)
     {
         printf("[W5500] init success, link up (Link Up)\r\n");
-        printf("[W5500] IP: 192.168.1.100, Port: please check socket configuration\r\n");
+        printf("[W5500] IP: 192.168.1.200, Port: please check socket configuration\r\n");
     }
     else if (w5500_ret == 1)
     {
@@ -51,5 +48,11 @@ int main(void)
             ; /* 初始化失败, 停止运行 */
     }
 
-    freertos_demo(); /* 运行FreeRTOS例程 */
+    /* ---- 配置 TCP 服务器地址 (可根据需要修改) ---- */
+    {
+        uint8_t server_ip[4] = {192, 168, 1, 4};  /* 目标服务器 IP (用户PC) */
+        tcp_client_set_server(server_ip, 8080);    /* 端口 8080 */
+    }
+
+    freertos_demo(); /* 运行FreeRTOS例程 (内含TCP客户端任务) */
 }

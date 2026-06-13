@@ -190,7 +190,7 @@ static uint32_t sys_get_flash_latency(uint32_t sysclk_freq)
  *              SystemInit() 完成:
  *              - 开启 HSI (8MHz, 默认时钟源)
  *              - 开启 HSE, 等待就绪 (超时 HSE_STARTUP_TIMEOUT = 100ms)
- *              - 配置 PLL (HSE × 9 = 72MHz)
+ *              - 配置 PLL (HSI × 9 = 72MHz)
  *              - 切换到 PLL 作为系统时钟 SYSCLK
  *              - 更新 SystemCoreClock = 72MHz
  *              之后跳转到 main() → HAL_Init() → sys_stm32_clock_init()
