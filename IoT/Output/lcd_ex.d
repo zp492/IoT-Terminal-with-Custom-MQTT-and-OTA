@@ -1,4 +1,4 @@
-..\..\output\lcd_ex.o: ..\..\BSP\LCD\lcd_ex.c
+..\..\output\lcd_ex.o: ..\..\BSP\Src\lcd_ex.c
 ..\..\output\lcd_ex.o: ..\..\Drivers\./SYSTEM/delay/delay.h
 ..\..\output\lcd_ex.o: ..\..\Drivers\./SYSTEM/sys/sys.h
 ..\..\output\lcd_ex.o: ..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include\stm32f1xx.h
@@ -59,3 +59,5 @@
 ..\..\output\lcd_ex.o: ..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pcd_ex.h
 ..\..\output\lcd_ex.o: ..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_hcd.h
 ..\..\output\lcd_ex.o: ..\..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_mmc.h
+..\..\output\lcd_ex.o: ..\..\BSP\Inc\lcd.h
+..\..\output\lcd_ex.o: E:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

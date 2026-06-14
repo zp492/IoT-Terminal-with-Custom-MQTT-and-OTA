@@ -3,8 +3,8 @@
 "..\..\output\stm32f1xx_it.o"
 "..\..\output\system_stm32f1xx.o"
 "..\..\output\main.o"
-"..\..\output\freertos_demo.o"
 "..\..\output\w5500_port.o"
+"..\..\output\freertos_task.o"
 "..\..\output\delay.o"
 "..\..\output\sys.o"
 "..\..\output\usart.o"
@@ -37,6 +37,7 @@
 "..\..\output\stm32f1xx_ll_tim.o"
 "..\..\output\stm32f1xx_ll_usart.o"
 "..\..\output\stm32f1xx_ll_fsmc.o"
+"..\..\output\stm32f1xx_hal_sram.o"
 "..\..\output\tasks.o"
 "..\..\output\queue.o"
 "..\..\output\timers.o"
@@ -53,6 +54,9 @@
 "..\..\output\w5500.o"
 "..\..\output\spi.o"
 "..\..\output\wizchip_conf.o"
+"..\..\output\tcp_client.o"
+"..\..\output\lcd.o"
+"..\..\output\dht11.o"
 --strict --scatter "..\..\Output\f103_zj.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

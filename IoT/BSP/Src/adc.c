@@ -4,8 +4,8 @@
  * @brief       ADC3 驱动 — 通道 6 / DMA 连续采集
  * @note        参考 adc_dma.c 模式重写:
  *              硬件:  PF8 → ADC3_CH6 (模拟输入)
- *              DMA:  ADC3 → DMA2_Channel4 → 内存
- *              中断:  DMA2_Channel4_5_IRQHandler, 优先级 3/3
+ *              DMA:  ADC3 → DMA2_Channel5 → 内存
+ *              中断:  DMA2_Channel4_5_IRQHandler, TCIF5=bit17, 优先级 3/3
  *              时钟:  ADC 工作于 PCLK2 / 6 = 72 / 6 = 12MHz
  *              转换:  单通道 / 连续 / 软件触发
  ****************************************************************************************************
@@ -18,7 +18,7 @@
  * ================================================================================ */
 
 static ADC_HandleTypeDef g_adc_handle;          /* ADC3 句柄 */
-static DMA_HandleTypeDef g_dma_adc_handle;      /* DMA2_Channel4 句柄 */
+static DMA_HandleTypeDef g_dma_adc_handle;      /* DMA2_Channel5 句柄 */
 static volatile uint8_t  g_dma_adc_sta;         /* DMA 传输完成标志 (ISR 置 1) */
 static uint16_t g_adc_buf[1];                   /* DMA 目标缓冲区 */
 
@@ -37,7 +37,7 @@ static void adc_dma_init(uint32_t Dst)
     /* ---- 1. DMA2 时钟 & 初始化 ---- */
     __HAL_RCC_DMA2_CLK_ENABLE();
 
-    g_dma_adc_handle.Instance = DMA2_Chann·el4;
+    g_dma_adc_handle.Instance = DMA2_Channel5;
     g_dma_adc_handle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
     g_dma_adc_handle.Init.PeriphInc           = DMA_PINC_DISABLE;
     g_dma_adc_handle.Init.MemInc              = DMA_MINC_ENABLE;
@@ -109,11 +109,11 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 static void adc_dma_enable(uint16_t cndtr)
 {
     ADC3->CR2 &= ~(1 << 0);                 /* 停 ADC */
-    DMA2_Channel4->CCR &= ~(1 << 0);        /* 停 DMA */
+    DMA2_Channel5->CCR &= ~(1 << 0);        /* 停 DMA */
 
-    while (DMA2_Channel4->CCR & (1 << 0));  /* 等待 DMA 停稳 */
-    DMA2_Channel4->CNDTR = cndtr;           /* 重载传输次数 */
-    DMA2_Channel4->CCR |= 1 << 0;           /* 开 DMA */
+    while (DMA2_Channel5->CCR & (1 << 0));  /* 等待 DMA 停稳 */
+    DMA2_Channel5->CNDTR = cndtr;           /* 重载传输次数 */
+    DMA2_Channel5->CCR |= 1 << 0;           /* 开 DMA */
     ADC3->CR2 |= 1 << 0;                    /* 开 ADC */
 
     ADC3->CR2 |= 1 << 22;                   /* 软件触发转换 */
@@ -125,14 +125,14 @@ static void adc_dma_enable(uint16_t cndtr)
 
 /**
  * @brief       DMA2 Channel4/5 共用中断
- * @note        ADC3 → DMA2_Channel4, TCIF4 = DMA2_ISR bit13
+ * @note        ADC3 → DMA2_Channel5, TCIF5 = DMA2_ISR bit17
  */
 void DMA2_Channel4_5_IRQHandler(void)
 {
-    if (DMA2->ISR & (1 << 13))              /* TCIF4: Channel4 传输完成 */
+    if (DMA2->ISR & (1 << 17))              /* TCIF5: Channel5 传输完成 */
     {
         g_dma_adc_sta = 1;
-        DMA2->IFCR |= (1 << 13);            /* 清除标志 */
+        DMA2->IFCR |= (1 << 17);            /* 清除标志 */
     }
 }
 

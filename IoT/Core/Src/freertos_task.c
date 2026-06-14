@@ -6,7 +6,6 @@
 #include "./MALLOC/malloc.h"
 #include "tcp_client.h"
 #include "dht11.h"
-#include "adc.h"
 #include "lcd.h"
 /*FreeRTOS*********************************************************************************************/
 #include "FreeRTOS.h"
@@ -58,12 +57,12 @@ void freertos_demo(void)
 void start_task(void *pvParameters)
 {
     taskENTER_CRITICAL(); // 进入临界区
-    xTaskCreate(tcp_client_task,
-                "tcp_client",
-                TCP_CLIENT_STACK_SIZE,
-                NULL,
-                TCP_CLIENT_TSAK_PROI,
-                &tcp_client_task_handler);
+//    xTaskCreate(tcp_client_task,
+//                "tcp_client",
+//                TCP_CLIENT_STACK_SIZE,
+//                NULL,
+//                TCP_CLIENT_TSAK_PROI,
+//                &tcp_client_task_handler);
     xTaskCreate(sensor_task,
                 "sensor",
                 SENSOR_STACK_SIZE,
@@ -81,7 +80,6 @@ void start_task(void *pvParameters)
 void sensor_task(void *pvParameters)
 {
     uint8_t temp, humi;
-    uint16_t adc_raw, adc_mv;
     char buf[32];
 
     (void)pvParameters;
@@ -100,11 +98,7 @@ void sensor_task(void *pvParameters)
     {
         printf("[SENSOR] DHT11 not found! (check PG11)\r\n");
     }
-
-    printf("[SENSOR] ADC3 CH6 init (PF8)...\r\n");
-    adc_init();
-    printf("[SENSOR] ADC3 DMA2_Ch4 started\r\n");
-
+    
     /* 等待传感器稳定 */
     vTaskDelay(pdMS_TO_TICKS(2000));
 
@@ -127,30 +121,21 @@ void sensor_task(void *pvParameters)
             lcd_show_string(10, 30, 240, 24, 24, "Temp: -- C    ", RED);
             lcd_show_string(10, 70, 240, 24, 24, "Humi: -- %    ", BLUE);
         }
-
-        /* 读取 ADC */
-        adc_raw = adc_get_value();
-        adc_mv  = adc_get_mv();
-
-        snprintf(buf, sizeof(buf), "ADC3CH6 Raw : %4d   ", adc_raw);
-        lcd_show_string(10, 120, 240, 24, 24, buf, BLACK);
-
-        snprintf(buf, sizeof(buf), "ADC3CH6 Volt: %4dmV", adc_mv);
-        lcd_show_string(10, 160, 240, 24, 24, buf, BLACK);
+        
 
         /* 串口同步输出 */
-        printf("[SENSOR] Temp=%dC  Humi=%d%%  ADC=%d(%dmV)\r\n",
-               temp, humi, adc_raw, adc_mv);
+        printf("[SENSOR] Temp=%dC  Humi=%d%%  \r\n",
+               temp, humi);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
-/**
- * @brief       TCP 客户端任务 (FreeRTOS 任务入口)
- * @note        薄包装, 实际逻辑在 tcp_client_run() 中
- */
-void tcp_client_task(void *pvParameters)
-{
-    tcp_client_run(pvParameters);
-}
+///**
+// * @brief       TCP 客户端任务 (FreeRTOS 任务入口)
+// * @note        薄包装, 实际逻辑在 tcp_client_run() 中
+// */
+//void tcp_client_task(void *pvParameters)
+//{
+//    tcp_client_run(pvParameters);
+//}

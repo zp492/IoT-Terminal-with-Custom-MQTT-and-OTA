@@ -13,7 +13,7 @@
  ****************************************************************************************************
  */
 
-#include "./BSP/DHT11/dht11.h"
+#include "dht11.h"
 #include "./SYSTEM/delay/delay.h"
 
 /* FreeRTOS — 关键时序段需禁止任务调度 */
@@ -28,10 +28,10 @@
 #define DHT11_RESET_HIGH_US     30      /* 主机释放总线 20~40μs */
 #define DHT11_RESP_LOW_US       80      /* 从机响应低电平 80μs */
 #define DHT11_RESP_HIGH_US      80      /* 从机响应高电平 80μs */
-#define DHT11_BIT_START_US      50      /* 每bit开始: 低电平 50μs */
-#define DHT11_BIT0_HIGH_US      28      /* bit=0: 高电平 26~28μs */
+#define DHT11_BIT_START_US      14      /* 每bit开始: 低电平 14μs */
+#define DHT11_BIT0_HIGH_US      27      /* bit=0: 高电平 26~28μs */
 #define DHT11_BIT1_HIGH_US      70      /* bit=1: 高电平 70μs */
-#define DHT11_SAMPLE_DELAY_US   40      /* 在上升沿后 40μs 采样 (28 < 40 < 70) */
+#define DHT11_SAMPLE_DELAY_US   40      /* 在上升沿后 40μs 采样 (27 < 40 < 70) */
 
 /* 轮询超时 (μs), 用于从机应答和 bit 边沿检测 */
 #define DHT11_POLL_TIMEOUT_US   120
@@ -39,18 +39,6 @@
 /* 读取参数 */
 #define DHT11_BUF_SIZE          5       /* 数据帧: 湿度整数+小数+温度整数+小数+校验 */
 #define DHT11_MAX_RETRIES       3       /* 校验失败最大重试次数 */
-
-/**
- * @brief       微秒级忙等计数器 (不依赖 SysTick, 用于 ISR 安全场景)
- * @param       us: 延时微秒数 (近似值, 72MHz 下每循环约 12 周期 ≈ 0.17μs)
- * @note        仅在关闭全局中断的临界区内使用, 避免调用 delay_us 带来的开销
- */
-static inline void dht11_spin_us(uint32_t us)
-{
-    /* 72MHz 下每计数值 ≈ 0.17μs, 乘以 6 约得 1μs */
-    uint32_t cnt = us * 6;
-    while (cnt--) { __NOP(); }
-}
 
 /**
  * @brief       等待引脚变为指定电平, 带超时
@@ -106,17 +94,18 @@ static uint8_t dht11_wait_ack(void)
  * @brief       从 DHT11 读取一个 bit
  * @retval      0 或 1
  * @note        必须在关闭中断的临界区内调用, 时序:
- *              每 bit 开始: 50μs 低电平 → 26~28μs(bit=0) 或 70μs(bit=1) 高电平
- *              在上升沿后 40μs 采样 (28 < 40 < 70)
+ *              每 bit 开始: 14μs 低电平 → 26~28μs(bit=0) 或 70μs(bit=1) 高电平
+ *              在上升沿后 40μs 采样 (27 < 40 < 70)
  */
 static uint8_t dht11_read_bit(void)
 {
-    /* 等待 bit 开始的 50μs 低电平结束 */
+    /* 等待 bit 开始的 50μs 低电平 (先等低, 再等上升沿, 与原版一致) */
+    if (dht11_wait_level(0, DHT11_POLL_TIMEOUT_US)) return 0;
     if (dht11_wait_level(1, DHT11_POLL_TIMEOUT_US)) return 0;
 
-    /* 上升沿后延时 40μs, 此时:
-       bit=0 → 高电平持续 28μs, 已回落到低 → DHT11_DQ_IN=0
-       bit=1 → 高电平持续 70μs, 仍为高    → DHT11_DQ_IN=1 */
+    /* 上升沿后延时 40μs 采样:
+       bit=0 → 高电平持续 27μs, 已回落 → 读到 0
+       bit=1 → 高电平持续 70μs, 仍为高 → 读到 1 */
     delay_us(DHT11_SAMPLE_DELAY_US);
 
     return (uint8_t)DHT11_DQ_IN;
