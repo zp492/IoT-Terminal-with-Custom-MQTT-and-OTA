@@ -28,14 +28,14 @@
  * 普通GPIO引脚:
  *   PB12 → W5500_SCS   (SPI片选, 推挽输出, 低电平选中)
  *   PD6  → W5500_RST   (硬件复位, 推挽输出, 低电平复位)
- *   PA1  → W5500_INT   (中断输入, 可选, 浮空输入)
+ *   PA2  → W5500_INT   (中断输入, 可选, 浮空输入)
  * ================================================================================ */
 #define W5500_SCS_PORT      GPIOB
 #define W5500_SCS_PIN       GPIO_PIN_12
 #define W5500_RST_PORT      GPIOD
 #define W5500_RST_PIN       GPIO_PIN_6
 #define W5500_INT_PORT      GPIOA
-#define W5500_INT_PIN       GPIO_PIN_1
+#define W5500_INT_PIN       GPIO_PIN_2
 
 /* SPI句柄声明 (定义在spi.c中) */
 extern SPI_HandleTypeDef g_spi_handle;

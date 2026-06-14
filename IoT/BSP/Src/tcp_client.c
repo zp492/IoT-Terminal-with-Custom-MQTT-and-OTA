@@ -44,7 +44,7 @@ static uint32_t g_send_count = 0;                   /* 发包计数 */
  * ================================================================================ */
 
 /**
- * @brief       设置目标服务器
+ * @brief       设置目标服务器·
  */
 void tcp_client_set_server(uint8_t ip[4], uint16_t port)
 {

@@ -8,7 +8,7 @@
  *              SPI2_MOSI → PB15  (AF推挽)
  *              W5500_SCS → PB12  (推挽输出, 软件控制片选)
  *              W5500_RST → PD6   (推挽输出, 低电平复位)
- *              W5500_INT → PA1   (浮空输入, 中断引脚, 可选)
+ *              W5500_INT → PA2   (浮空输入, 中断引脚, 可选)
  ****************************************************************************************************
  */
 
@@ -56,7 +56,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
         __HAL_RCC_SPI2_CLK_ENABLE();    /* SPI2外设时钟 */
         __HAL_RCC_GPIOB_CLK_ENABLE();   /* PB12/PB13/PB14/PB15 */
         __HAL_RCC_GPIOD_CLK_ENABLE();   /* PD6  (W5500_RST) */
-        __HAL_RCC_GPIOA_CLK_ENABLE();   /* PA1  (W5500_INT) */
+        __HAL_RCC_GPIOA_CLK_ENABLE();   /* PA2  (W5500_INT) */
         __HAL_RCC_AFIO_CLK_ENABLE();    /* AFIO复用时钟 */
 
         /* ---- 2. SPI2 复用功能引脚 (PB13/PB14/PB15) ---- */
@@ -84,7 +84,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
         HAL_GPIO_Init(W5500_RST_PORT, &gpio_init_struct);
         W5500_RST_HIGH();  /* 初始: 不复位 */
 
-        /* W5500_INT (PA1): 中断输入, 浮空输入 (不使用中断时可不配置) */
+        /* W5500_INT (PA2): 中断输入, 浮空输入 (不使用中断时可不配置) */
         gpio_init_struct.Pin   = W5500_INT_PIN;
         gpio_init_struct.Mode  = GPIO_MODE_INPUT;
         gpio_init_struct.Pull  = GPIO_NOPULL;
