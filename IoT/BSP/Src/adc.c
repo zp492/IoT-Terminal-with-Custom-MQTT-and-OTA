@@ -1,96 +1,170 @@
-#include "./BSP/ADC/adc.h"
+/**
+ ****************************************************************************************************
+ * @file        adc.c
+ * @brief       ADC3 é©±åŠ¨ â€” é€šé“ 6 / DMA è¿žç»­é‡‡é›†
+ * @note        å‚è€ƒ adc_dma.c æ¨¡å¼é‡å†™:
+ *              ç¡¬ä»¶:  PF8 â†’ ADC3_CH6 (æ¨¡æ‹Ÿè¾“å…¥)
+ *              DMA:  ADC3 â†’ DMA2_Channel4 â†’ å†…å­˜
+ *              ä¸­æ–­:  DMA2_Channel4_5_IRQHandler, ä¼˜å…ˆçº§ 3/3
+ *              æ—¶é’Ÿ:  ADC å·¥ä½œäºŽ PCLK2 / 6 = 72 / 6 = 12MHz
+ *              è½¬æ¢:  å•é€šé“ / è¿žç»­ / è½¯ä»¶è§¦å‘
+ ****************************************************************************************************
+ */
 
-ADC_HandleTypeDef g_adc_handle;
-DMA_HandleTypeDef g_dma_adc_handle;
-uint8_t g_dma_adc_sta;
+#include "adc.h"
 
-void adc_dma_init(uint32_t Dst)
+/* ================================================================================
+ * ç¡¬ä»¶å¥æŸ„ & çŠ¶æ€
+ * ================================================================================ */
+
+static ADC_HandleTypeDef g_adc_handle;          /* ADC3 å¥æŸ„ */
+static DMA_HandleTypeDef g_dma_adc_handle;      /* DMA2_Channel4 å¥æŸ„ */
+static volatile uint8_t  g_dma_adc_sta;         /* DMA ä¼ è¾“å®Œæˆæ ‡å¿— (ISR ç½® 1) */
+static uint16_t g_adc_buf[1];                   /* DMA ç›®æ ‡ç¼“å†²åŒº */
+
+/* ================================================================================
+ * åˆå§‹åŒ– & é…ç½®
+ * ================================================================================ */
+
+/**
+ * @brief       ADC3 DMA åˆå§‹åŒ–
+ * @param       Dst: DMA ç›®æ ‡åœ°å€ (æ­¤å¤„ä¸º g_adc_buf)
+ */
+static void adc_dma_init(uint32_t Dst)
 {
-    ADC_ChannelConfTypeDef adc_chy_handle = {0};
-    
-    __HAL_RCC_DMA1_CLK_ENABLE();
-    
-    g_dma_adc_handle.Instance = DMA1_Channel1;                           /* DMAµÄÍâÉè»ùµØÖ·ÅäÖÃ´øÍ¨µÀ    */
-    g_dma_adc_handle.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    g_dma_adc_handle.Init.PeriphInc = DMA_PINC_DISABLE;
-    g_dma_adc_handle.Init.MemInc = DMA_MINC_ENABLE;
+    ADC_ChannelConfTypeDef adc_ch_conf = {0};
+
+    /* ---- 1. DMA2 æ—¶é’Ÿ & åˆå§‹åŒ– ---- */
+    __HAL_RCC_DMA2_CLK_ENABLE();
+
+    g_dma_adc_handle.Instance = DMA2_ChannÂ·el4;
+    g_dma_adc_handle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    g_dma_adc_handle.Init.PeriphInc           = DMA_PINC_DISABLE;
+    g_dma_adc_handle.Init.MemInc              = DMA_MINC_ENABLE;
     g_dma_adc_handle.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    g_dma_adc_handle.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    g_dma_adc_handle.Init.Mode = DMA_NORMAL;
-    g_dma_adc_handle.Init.Priority = DMA_PRIORITY_HIGH;
-    HAL_DMA_Init(&g_dma_adc_handle);     /* DMA³õÊ¼»¯£¬DMA×÷ÎªÍ¨ÓÃÍâÉèÎÞMspInit */
-    
-    __HAL_LINKDMA(&g_adc_handle, DMA_Handle, g_dma_adc_handle);//(__HANDLE__)->__PPP_DMA_FIELD__ = &(__DMA_HANDLE__);ÁªÏµDMAÓëADC
-    
-    g_adc_handle.Instance = ADC1;                                  /* ADC1 */
-    g_adc_handle.Init.DataAlign = ADC_DATAALIGN_RIGHT;             /* ÓÒ¶ÔÆë */
-    g_adc_handle.Init.ScanConvMode = ADC_SCAN_DISABLE;            /* ²»É¨Ãè */  
-    g_adc_handle.Init.ContinuousConvMode = ENABLE;              /* Á¬Ðø */ 
-    g_adc_handle.Init.NbrOfConversion = 1;                     /* µ¥Í¨µÀ */
-    g_adc_handle.Init.DiscontinuousConvMode = DISABLE;        /* ²»¼ä¶Ï */
-    g_adc_handle.Init.ExternalTrigConv = ADC_SOFTWARE_START; /* Èí¼þ´¥·¢ */
-    HAL_ADC_Init(&g_adc_handle);          /* ADC³õÊ¼»¯ */
-    
+    g_dma_adc_handle.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
+    g_dma_adc_handle.Init.Mode                = DMA_NORMAL;
+    g_dma_adc_handle.Init.Priority            = DMA_PRIORITY_HIGH;
+    HAL_DMA_Init(&g_dma_adc_handle);          /* â†’ è§¦å‘ HAL_DMA_MspInit */
+
+    /* ---- 2. å…³è” DMA â†’ ADC ---- */
+    __HAL_LINKDMA(&g_adc_handle, DMA_Handle, g_dma_adc_handle);
+
+    /* ---- 3. ADC3 å‚æ•° ---- */
+    g_adc_handle.Instance                   = ADC3;
+    g_adc_handle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+    g_adc_handle.Init.ScanConvMode          = ADC_SCAN_DISABLE;
+    g_adc_handle.Init.ContinuousConvMode    = ENABLE;
+    g_adc_handle.Init.NbrOfConversion       = 1;
+    g_adc_handle.Init.DiscontinuousConvMode = DISABLE;
+    g_adc_handle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+    HAL_ADC_Init(&g_adc_handle);            /* â†’ è§¦å‘ HAL_ADC_MspInit */
+
     HAL_ADCEx_Calibration_Start(&g_adc_handle);
-    
-    adc_chy_handle.Channel = ADC_CHANNEL_1;          /* ÅäÖÃadc1Í¨µÀ²ÎÊý */
-    adc_chy_handle.Rank = ADC_REGULAR_RANK_1;
-    adc_chy_handle.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    HAL_ADC_ConfigChannel( &g_adc_handle, &adc_chy_handle);
-    
-    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 3);
-    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-    
-    HAL_DMA_Start_IT(&g_dma_adc_handle, (uint32_t)&ADC1->DR, Dst, 0);
+
+    /* ---- 4. é€šé“é…ç½® ---- */
+    adc_ch_conf.Channel      = ADC_CHANNEL_6;
+    adc_ch_conf.Rank         = ADC_REGULAR_RANK_1;
+    adc_ch_conf.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    HAL_ADC_ConfigChannel(&g_adc_handle, &adc_ch_conf);
+
+    /* ---- 5. DMA ä¸­æ–­ ---- */
+    HAL_NVIC_SetPriority(DMA2_Channel4_5_IRQn, 3, 3);
+    HAL_NVIC_EnableIRQ(DMA2_Channel4_5_IRQn);
+
+    /* ---- 6. å¯åŠ¨ DMA + ADC ---- */
+    HAL_DMA_Start_IT(&g_dma_adc_handle, (uint32_t)&ADC3->DR, Dst, 0);
     HAL_ADC_Start_DMA(&g_adc_handle, &Dst, 0);
-    
 }
 
-
-void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
+/**
+ * @brief       ADC3 å¼•è„šåˆå§‹åŒ– (HAL å›žè°ƒ)
+ */
+void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 {
-    if (hadc->Instance == ADC1)
+    if (hadc->Instance == ADC3)
     {
-        GPIO_InitTypeDef gpio_init_struct;
-        RCC_PeriphCLKInitTypeDef adc_clk_init = {0};
-        
-        __HAL_RCC_GPIOA_CLK_ENABLE();                  /* Ê¹ÄÜGPIOÊ±ÖÓ¼°ADC1ÍâÉèÊ±ÖÓ */
-        __HAL_RCC_ADC1_CLK_ENABLE();
-        
-        gpio_init_struct.Pin = GPIO_PIN_1;
-        gpio_init_struct.Mode = GPIO_MODE_ANALOG;       /* Ä£Äâ¹¦ÄÜ */
-        HAL_GPIO_Init(GPIOA, &gpio_init_struct);
-        
-        adc_clk_init.PeriphClockSelection = RCC_PERIPHCLK_ADC;      /* ÅäÖÃadc1Ê±ÖÓ6·ÖÆµ */
-        adc_clk_init.AdcClockSelection = RCC_ADCPCLK2_DIV6;
-        HAL_RCCEx_PeriphCLKConfig(&adc_clk_init);
-        
-        
+        GPIO_InitTypeDef       gpio_init = {0};
+        RCC_PeriphCLKInitTypeDef clk_init = {0};
+
+        __HAL_RCC_GPIOF_CLK_ENABLE();       /* PF8 æ—¶é’Ÿ */
+        __HAL_RCC_ADC3_CLK_ENABLE();        /* ADC3 æ—¶é’Ÿ */
+
+        /* PF8 â†’ ADC3_CH6 æ¨¡æ‹Ÿè¾“å…¥ */
+        gpio_init.Pin  = GPIO_PIN_8;
+        gpio_init.Mode = GPIO_MODE_ANALOG;
+        HAL_GPIO_Init(GPIOF, &gpio_init);
+
+        /* ADC æ—¶é’Ÿ = PCLK2 / 6 = 72 / 6 = 12MHz */
+        clk_init.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+        clk_init.AdcClockSelection    = RCC_ADCPCLK2_DIV6;
+        HAL_RCCEx_PeriphCLKConfig(&clk_init);
     }
 }
 
-/* ÅäÖÃDMA ADCÒ»´Î´«ÊäÊýÄ¿ */
-void adc_dma_enable(uint16_t cndtr)
+/**
+ * @brief       å¯åŠ¨ DMA ä¼ è¾“ (é‡æ–°è£…è½½è®¡æ•°å™¨)
+ * @param       cndtr: ä¼ è¾“æ¬¡æ•°
+ */
+static void adc_dma_enable(uint16_t cndtr)
 {
-    ADC1->CR2 &= ~(1 << 0) ;
-    DMA1_Channel1->CCR &= ~(1 << 0);
-    
-    while (DMA1_Channel1->CCR & (1 << 0));
-    DMA1_Channel1->CNDTR = cndtr;  /* ÅäÖÃºÃ´«ÊäÊýÁ¿£¬¿ªÆôDMA¡¢ADC */
-    DMA1_Channel1->CCR |= 1 << 0;
-    ADC1->CR2 |= 1 << 0;
-    
-    ADC1->CR2 |= 1 << 22;  /*¿ªÆôADC¹æÔò×é×ª»» */
+    ADC3->CR2 &= ~(1 << 0);                 /* åœ ADC */
+    DMA2_Channel4->CCR &= ~(1 << 0);        /* åœ DMA */
+
+    while (DMA2_Channel4->CCR & (1 << 0));  /* ç­‰å¾… DMA åœç¨³ */
+    DMA2_Channel4->CNDTR = cndtr;           /* é‡è½½ä¼ è¾“æ¬¡æ•° */
+    DMA2_Channel4->CCR |= 1 << 0;           /* å¼€ DMA */
+    ADC3->CR2 |= 1 << 0;                    /* å¼€ ADC */
+
+    ADC3->CR2 |= 1 << 22;                   /* è½¯ä»¶è§¦å‘è½¬æ¢ */
 }
 
+/* ================================================================================
+ * ä¸­æ–­æœåŠ¡
+ * ================================================================================ */
 
-void DMA1_Channel1_IRQHandler(void)
+/**
+ * @brief       DMA2 Channel4/5 å…±ç”¨ä¸­æ–­
+ * @note        ADC3 â†’ DMA2_Channel4, TCIF4 = DMA2_ISR bit13
+ */
+void DMA2_Channel4_5_IRQHandler(void)
 {
-    if (DMA1->ISR & (1 << 1))
+    if (DMA2->ISR & (1 << 13))              /* TCIF4: Channel4 ä¼ è¾“å®Œæˆ */
     {
         g_dma_adc_sta = 1;
-        DMA1->IFCR |= (1 << 1);
+        DMA2->IFCR |= (1 << 13);            /* æ¸…é™¤æ ‡å¿— */
     }
 }
 
+/* ================================================================================
+ * å…¬å¼€æŽ¥å£
+ * ================================================================================ */
 
+/**
+ * @brief       åˆå§‹åŒ– ADC3_CH6 + DMA è¿žç»­é‡‡é›†
+ * @note        è°ƒç”¨æ­¤å‡½æ•°åŽ, DMA è‡ªåŠ¨å°† ADC3_CH6 çš„è½¬æ¢ç»“æžœå†™å…¥å†…éƒ¨ç¼“å†²åŒº
+ */
+void adc_init(void)
+{
+    adc_dma_init((uint32_t)g_adc_buf);
+    adc_dma_enable(1);
+}
+
+/**
+ * @brief       èŽ·å–æœ€è¿‘ä¸€æ¬¡ ADC é‡‡æ ·å€¼
+ * @retval      12 ä½åŽŸå§‹å€¼ (0 ~ 4095)
+ */
+uint16_t adc_get_value(void)
+{
+    return g_adc_buf[0];
+}
+
+/**
+ * @brief       èŽ·å– ADC ç”µåŽ‹ (mV)
+ * @note        åŸºå‡†ç”µåŽ‹ 3.3V = 3300mV
+ *              mV = raw Ã— 3300 / 4096
+ */
+uint16_t adc_get_mv(void)
+{
+    return (uint16_t)((uint32_t)g_adc_buf[0] * 3300 / 4096);
+}

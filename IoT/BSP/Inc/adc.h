@@ -1,9 +1,19 @@
+/**
+ ****************************************************************************************************
+ * @file        adc.h
+ * @brief       ADC3 驱动 — CH6 / DMA 连续采集
+ * @note        硬件: PF8 → ADC3_CH6 → DMA2_Channel4 → 内存
+ ****************************************************************************************************
+ */
+
 #ifndef __ADC_H
 #define __ADC_H
 
 #include "stm32f1xx.h"
 
-void adc_dma_init(uint32_t Dst);
-void adc_dma_enable(uint16_t cndtr);
+/* ---- 公开接口 ---- */
+void     adc_init(void);                            /* 初始化 ADC3_CH6 + DMA 连续采集 */
+uint16_t adc_get_value(void);                       /* 获取最近一次原始值 (0~4095) */
+uint16_t adc_get_mv(void);                          /* 转换为 mV (基准 3.3V) */
 
 #endif

@@ -15,5 +15,6 @@ void freertos_demo(void);
 /* ---- FreeRTOS 任务函数 ---- */
 void start_task(void *pvParameters);
 void tcp_client_task(void *pvParameters);
+void sensor_task(void *pvParameters);
 
 #endif /* __FREERTOS_TASK_H */
