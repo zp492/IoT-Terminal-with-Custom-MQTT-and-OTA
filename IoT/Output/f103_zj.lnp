@@ -47,7 +47,6 @@
 "..\..\output\stream_buffer.o"
 "..\..\output\heap_4.o"
 "..\..\output\port.o"
-"..\..\output\btim.o"
 "..\..\output\key.o"
 "..\..\output\led.o"
 "..\..\output\socket.o"
@@ -57,6 +56,10 @@
 "..\..\output\tcp_client.o"
 "..\..\output\lcd.o"
 "..\..\output\dht11.o"
+"..\..\output\transport.o"
+"..\..\output\onenet.o"
+"..\..\output\mqtt_client.o"
+"..\..\output\mqtt_wrapper.o"
 --strict --scatter "..\..\Output\f103_zj.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

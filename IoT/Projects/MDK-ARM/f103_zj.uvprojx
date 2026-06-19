@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F103xE,USE_HAL_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\FreeRTOS\include;..\..\Drivers;..\..\Core\Inc;..\..\BSP\Inc;..\..\FreeRTOS\portable\RVDS\ARM_CM3;..\..\Core;..\..\Middlewares;..\..\BSP</IncludePath>
+              <IncludePath>..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\FreeRTOS\include;..\..\Drivers;..\..\Core\Inc;..\..\BSP\Inc;..\..\FreeRTOS\portable\RVDS\ARM_CM3;..\..\Core;..\..\Middlewares;..\..\BSP;..\..\App\Onenet;..\..\Middlewares\MQTT</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -655,11 +655,6 @@
           <GroupName>BSP</GroupName>
           <Files>
             <File>
-              <FileName>btim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\BSP\Src\btim.c</FilePath>
-            </File>
-            <File>
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\key.c</FilePath>
@@ -754,6 +749,36 @@
               <FileName>dht11.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\dht11.c</FilePath>
+            </File>
+            <File>
+              <FileName>transport.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\transport.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>App\Onenet</GroupName>
+          <Files>
+            <File>
+              <FileName>onenet.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\App\Onenet\onenet.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares\MQTT</GroupName>
+          <Files>
+            <File>
+              <FileName>mqtt_client.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\MQTT\mqtt_client.c</FilePath>
+            </File>
+            <File>
+              <FileName>mqtt_wrapper.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Middlewares\MQTT\mqtt_wrapper.c</FilePath>
             </File>
           </Files>
         </Group>

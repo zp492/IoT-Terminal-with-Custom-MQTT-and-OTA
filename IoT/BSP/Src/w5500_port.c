@@ -261,7 +261,7 @@ uint8_t w5500_init(void)
     /* ----- 第5步: 设置网络信息 ----- */
     w5500_get_mac_from_uid(net_info.mac);                   /* MAC: 由STM32唯一ID自动生成 */
     net_info.ip[0]  = 192; net_info.ip[1]  = 168;
-    net_info.ip[2]  = 1;   net_info.ip[3]  = 200;       /* IP:  192.168.1.200 */
+    net_info.ip[2]  = 1;   net_info.ip[3]  = 100;       /* IP:  192.168.1.100 */
     net_info.sn[0]  = 255; net_info.sn[1]  = 255;
     net_info.sn[2]  = 255; net_info.sn[3]  = 0;         /* SN:  255.255.255.0 */
     net_info.gw[0]  = 192; net_info.gw[1]  = 168;

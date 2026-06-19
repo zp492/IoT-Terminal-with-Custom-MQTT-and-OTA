@@ -13,14 +13,10 @@
 #include "./MALLOC/malloc.h"
 #include "freertos_task.h"
 #include "w5500_port.h"
-#include "tcp_client.h"
-#include "dht11.h"
-#include "adc.h"
-#include "lcd.h"
 
 int main(void)
 {
-//    uint8_t w5500_ret;
+    uint8_t w5500_ret;
 
     HAL_Init();                         /* 初始化HAL库 */
     sys_stm32_clock_init(RCC_PLL_MUL9); /* 设置时钟, 72MHz */
@@ -28,35 +24,35 @@ int main(void)
     usart_init(115200);                 /* 串口初始化为115200 */
     led_init();                         /* 初始化LED */
     key_init();                         /* 初始化按键 */
-    lcd_init();                             /* LCD 屏初始化 (FSMC) */
 
-//    /* ---- W5500 初始化 ---- */
-//    w5500_ret = w5500_init();
+    /* ---- W5500 初始化 ---- */
+    w5500_ret = w5500_init();
 
-//    if (w5500_ret == 0)
-//    {
-//        printf("[W5500] init success, link up (Link Up)\r\n");
-//        printf("[W5500] IP: 192.168.1.200, Port: please check socket configuration\r\n");
-//    }
-//    else if (w5500_ret == 1)
-//    {
-//        printf("[W5500] chip init success, but network cable is not connected (Link Down)\r\n");
-//        printf("[W5500] please check if the network cable is inserted to the router/switch\r\n");
-//        /* 仍然可以进入FreeRTOS, 后续插上网线后W5500会自动Link Up */
-//    }
-//    else
-//    {
-//        printf("[W5500] init failed! please check hardware connection:\r\n");
-//        printf("        PB12(CS) / PB13(SCK) / PB14(MISO) / PB15(MOSI) / PD6(RST)\r\n");
-//        while (1)
-//            ; /* 初始化失败, 停止运行 */
-//    }
+    if (w5500_ret == 0)
+    {
+        printf("[W5500] init success, link up (Link Up)\r\n");
+        {
+            wiz_NetInfo ni;
+            wizchip_getnetinfo(&ni);
+            printf("[W5500] MAC=%02X:%02X:%02X:%02X:%02X:%02X\r\n",
+                   ni.mac[0],ni.mac[1],ni.mac[2],
+                   ni.mac[3],ni.mac[4],ni.mac[5]);
+            printf("[W5500] IP=%d.%d.%d.%d\r\n", ni.ip[0], ni.ip[1], ni.ip[2], ni.ip[3]);
+            printf("[W5500] GW=%d.%d.%d.%d\r\n",
+                   ni.gw[0],ni.gw[1],ni.gw[2],ni.gw[3]);
+        }
+    }
+    else if (w5500_ret == 1)
+    {
+        printf("[W5500] chip OK, but no cable (Link Down)\r\n");
+        printf("[W5500] please check network cable\r\n");
+    }
+    else
+    {
+        printf("[W5500] init failed! check hardware:\r\n");
+        printf("        PB12(CS) PB13(SCK) PB14(MISO) PB15(MOSI) PD6(RST)\r\n");
+        while (1);
+    }
 
-//    /* ---- 配置 TCP 服务器地址 (可根据需要修改) ---- */
-//    {
-//        uint8_t server_ip[4] = {192, 168, 1, 4};  /* 目标服务器 IP (用户PC) */
-//        tcp_client_set_server(server_ip, 8080);    /* 端口 8080 */
-//    }
-
-    freertos_demo(); /* 运行FreeRTOS例程 (内含TCP客户端任务) */
+    freertos_demo(); /* 运行FreeRTOS例程 */
 }
