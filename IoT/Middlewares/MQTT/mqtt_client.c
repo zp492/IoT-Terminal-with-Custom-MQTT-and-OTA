@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        mqtt_client.c
+ * @author      zp492
  * @brief       MQTT 3.1.1 客户端 — 报文编解码 & 解析状态机 实现
  * @note        严格按照 MQTT 3.1.1 协议规范编写
  *              - 剩余长度编码 §2.2.3
@@ -33,7 +34,7 @@
  * ================================================================================ */
 
 /**
- * @brief       编码剩余长度
+ * @brief       剩余长度编码
  * @param       dst:    输出缓冲区 (至少 4 字节)
  * @param       length: 剩余长度 (0 ~ 268435455)
  * @retval      写入的字节数 (1~4)
@@ -55,7 +56,7 @@ uint8_t mqtt_encode_length(uint8_t *dst, uint32_t length)
 }
 
 /**
- * @brief       解码剩余长度
+ * @brief       剩余长度解码
  * @param       src:      输入字节序列
  * @param       consumed: 输出参数, 消耗的字节数 (可为 NULL)
  * @retval      解码后的剩余长度值
@@ -180,13 +181,13 @@ uint16_t mqtt_build_connect(uint8_t *buf, const mqtt_conn_t *conn)
     /* 用户名 (如果有) */
     if (conn->username && conn->username[0] != '\0') {
         flags |= (1 << 7);                          /* User Name Flag = 1 */
-        remaining += 2 + (uint32_t)strlen(conn->username);
+        remaining += 2 + (uint32_t)strlen(conn->username);/*2字节长度前缀 + 字符串*/
     }
 
     /* 密码 (仅当用户名也存在时有效, MQTT 3.1.1 §3.1.3.6) */
     if (conn->password && conn->password[0] != '\0') {
         flags |= (1 << 6);                          /* Password Flag = 1 */
-        remaining += 2 + (uint32_t)strlen(conn->password);
+        remaining += 2 + (uint32_t)strlen(conn->password);/*2字节长度前缀 + 字符串*/
     }
 
     /* 清理会话 */
@@ -276,7 +277,7 @@ uint16_t mqtt_build_publish(uint8_t *buf, const char *topic,
     /* ---- Topic ---- */
     *p++ = (uint8_t)(topic_len >> 8);
     *p++ = (uint8_t)(topic_len & 0xFF);
-    memcpy(p, topic, topic_len);
+    memcpy(p, topic, topic_len);//memcpy会自增复制，但p不会自增
     p += topic_len;
 
     /* ---- Payload (可选) ---- */

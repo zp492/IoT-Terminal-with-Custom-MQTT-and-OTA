@@ -61,7 +61,7 @@ TaskHandle_t led_task_handler;
  * 优先级低 (3), 仅比 LED 高, 不阻塞 MQTT/传感器
  */
 #define MONITOR_STACK_SIZE 128
-#define MONITOR_TSAK_PROI  2
+#define MONITOR_TSAK_PROI  4
 TaskHandle_t w5500_monitor_task_handler;
 
 /**
@@ -272,7 +272,12 @@ void w5500_monitor_task(void *pvParameters)
 static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
 {
     printf("[MQTT] CMD: %.*s\r\n", len, payload);
-    /* TODO: 解析 JSON 指令 → 控制 LED / 修改上报周期 等 */
+
+    /* 简单 JSON 匹配: {"led0":1} → LED0亮, {"led1":0} → LED1灭 */
+    if (strstr((char *)payload, "\"led0\":0")) LED0(1);
+    if (strstr((char *)payload, "\"led0\":1")) LED0(0);
+    if (strstr((char *)payload, "\"led1\":0")) LED1(1);
+    if (strstr((char *)payload, "\"led1\":1")) LED1(0);
 }
 
 void mqtt_task(void *pvParameters)
