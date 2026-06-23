@@ -94,6 +94,8 @@
 /*!< Uncomment the following line if you need to relocate the vector table
      anywhere in Flash or Sram, else the vector table is kept at the automatic
      remap of boot address selected */
+/* OTA: USER_VECT_TAB_ADDRESS 已移至 App 工程的 Keil Defines 中 (VECT_TAB_OFFSET=0xC000)
+   Bootloader 工程不应定义此宏, 保持向量表在 0x08000000 */
 /* #define USER_VECT_TAB_ADDRESS */
 
 #if defined(USER_VECT_TAB_ADDRESS)
@@ -108,8 +110,9 @@
 #else
 #define VECT_TAB_BASE_ADDRESS   FLASH_BASE      /*!< Vector Table base address field.
                                                      This value must be a multiple of 0x200. */
-#define VECT_TAB_OFFSET         0x00000000U     /*!< Vector Table base offset field.
-                                                     This value must be a multiple of 0x200. */
+#define VECT_TAB_OFFSET         0x0000C000U     /*!< Vector Table base offset field.
+                                                     OTA: App 固件偏移 48KB (0xC000),
+                                                     与 ota_partition.h 中 APP_VECT_TAB_OFFSET 一致 */
 #endif /* VECT_TAB_SRAM */
 #endif /* USER_VECT_TAB_ADDRESS */
 

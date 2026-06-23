@@ -1,7 +1,8 @@
 /**
  ****************************************************************************************************
  * @file        main.c
- * @brief       FreeRTOS + W5500 以太网实验
+ * @brief       FreeRTOS + W5500 以太网实验 (OTA App 固件)
+ * @note        App 起始地址 0x0800C000, 向量表需偏移以匹配
  ****************************************************************************************************
  */
 
@@ -13,10 +14,14 @@
 #include "./MALLOC/malloc.h"
 #include "freertos_task.h"
 #include "w5500_port.h"
+#include "ota_partition.h"
 
 int main(void)
 {
     uint8_t w5500_ret;
+
+    /* ---- OTA: 重定位向量表到 App 区 (Bootloader 占用 0x08000000~0x0800BFFF) ---- */
+    sys_nvic_set_vector_table(FLASH_BASE_ADDR, APP_VECT_TAB_OFFSET);
 
     HAL_Init();                         /* 初始化HAL库 */
     sys_stm32_clock_init(RCC_PLL_MUL9); /* 设置时钟, 72MHz */

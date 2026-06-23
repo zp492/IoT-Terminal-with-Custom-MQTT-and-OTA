@@ -1,0 +1,105 @@
+/**
+ ****************************************************************************************************
+ * @file        ota_partition.h
+ * @author      zp492
+ * @brief       OTA Flash 分区定义 (供 Bootloader 和 App 共用)
+ * @details     STM32F103ZET6 内部 Flash 512KB (0x08000000 ~ 0x08080000)
+ *
+ *              分区布局:
+ *              ┌──────────────────────────────────┐
+ *              │  0x08000000  Bootloader  (48KB)  │  第1步: 为Bootloader预留
+ *              │  0x0800C000  App 主区    (232KB)  │  当前App搬迁到此
+ *              │  0x08046000  Download区  (232KB)  │  后续: 新固件暂存区
+ *              │  0x08080000  Flash结束            │
+ *              └──────────────────────────────────┘
+ *
+ * @note        修改历史
+ *              V1.0 20260622  zp492: 创建, 定义基础分区
+ ****************************************************************************************************
+ */
+
+#ifndef __OTA_PARTITION_H
+#define __OTA_PARTITION_H
+
+#include "stm32f1xx.h"
+
+/* ================================================================================
+ * Flash 基址 (STM32F103 内部 Flash)
+ * ================================================================================ */
+#define FLASH_BASE_ADDR             FLASH_BASE          /* 0x08000000 */
+#define FLASH_TOTAL_SIZE            0x00080000UL        /* 512KB */
+
+/* ================================================================================
+ * Bootloader 分区 (前 48KB, 包含启动管理 + 固件校验 + Flash 擦写)
+ * ================================================================================ */
+#define BOOTLOADER_BASE_ADDR        (FLASH_BASE_ADDR)
+#define BOOTLOADER_SIZE             0x0000C000UL        /* 48KB */
+#define BOOTLOADER_END_ADDR         (BOOTLOADER_BASE_ADDR + BOOTLOADER_SIZE)  /* 0x0800C000 */
+
+/* ================================================================================
+ * App 主分区 (232KB, Bootloader 之后) — 当前运行固件
+ * ================================================================================ */
+#define APP_BASE_ADDR               BOOTLOADER_END_ADDR /* 0x0800C000 */
+#define APP_SIZE                    0x0003A000UL        /* 232KB */
+#define APP_END_ADDR                (APP_BASE_ADDR + APP_SIZE)  /* 0x08046000 */
+
+/* ================================================================================
+ * Download 分区 (232KB, App 之后) — 新固件缓存区 (后续步骤使用)
+ * ================================================================================ */
+#define DOWNLOAD_BASE_ADDR          APP_END_ADDR        /* 0x08046000 */
+#define DOWNLOAD_SIZE               0x0003A000UL        /* 232KB */
+#define DOWNLOAD_END_ADDR           (DOWNLOAD_BASE_ADDR + DOWNLOAD_SIZE)  /* 0x08080000 */
+
+/* ================================================================================
+ * 升级标志页 (Bootloader 区域内, page #22, 0x0800B000)
+ * --------------------------------------------------------------------------------
+ * Flag 页位于 Bootloader 区域末尾 4KB, 远离代码段, 避免执行 Flash 操作时
+ * 影响正在运行的 Bootloader 代码 (STM32F1 Flash 操作会 Stall 总线).
+ *
+ * Flag 结构 (4 个 32-bit Word):
+ *   Word 0: magic    = OTA_FLAG_MAGIC (0x4F544101)
+ *   Word 1: fw_size  = 固件字节数
+ *   Word 2: fw_crc32 = CRC32 校验值 (硬件 CRC: 多项式 0x04C11DB7)
+ *   Word 3: status   = FLAG_STATUS_PENDING / UPGRADING / DONE / ERROR
+ *
+ * Flag 清除方式: 擦除整个 Flag 页 (所有位恢复 0xFF)
+ * ================================================================================ */
+#define FLAG_PAGE_BASE_ADDR         0x0800B000UL
+#define FLAG_PAGE_SIZE              0x00000800UL        /* 2KB, STM32F103xE Flash 页大小 */
+
+/* ---- Flag Magic ---- */
+#define OTA_FLAG_MAGIC              0x4F544101UL        /* "OTA" + version 1 */
+
+/* ---- Flag Word 索引 (以 uint32_t 为单位偏移) ---- */
+#define FLAG_WORD_MAGIC             0
+#define FLAG_WORD_FW_SIZE           1
+#define FLAG_WORD_FW_CRC32          2
+#define FLAG_WORD_STATUS            3
+#define FLAG_TOTAL_WORDS            4
+
+/* ---- Flag Status 值 (写入低字节, 其余 0x00) ---- */
+#define FLAG_STATUS_PENDING         0x00000000UL        /* 固件已下载, 等待升级 */
+#define FLAG_STATUS_UPGRADING       0x55555555UL        /* 升级进行中 (Bootloader 写入) */
+#define FLAG_STATUS_DONE            0xAAAAAAAAUL        /* 升级完成, 待清除 (Bootloader 写入) */
+#define FLAG_STATUS_ERROR           0xEEEEEEEEUL        /* 升级失败 */
+
+/* ---- Flag 页地址校验 (编译期) ---- */
+/* FLAG_PAGE_BASE_ADDR = 0x0800B000, BOOTLOADER area = 0x08000000~0x0800BFFF */
+#if ((0x0800B000UL < 0x08000000UL) || ((0x0800B000UL + 0x00000800UL) > 0x0800C000UL))
+#error "Flag page must be entirely within Bootloader area!"
+#endif
+
+/* ================================================================================
+ * 编译期静态断言: 确保总分区间不超出 Flash 范围
+ * ================================================================================ */
+#if ((DOWNLOAD_END_ADDR - FLASH_BASE_ADDR) > FLASH_TOTAL_SIZE)
+#error "OTA partition overflow! Total partition size exceeds 512KB Flash."
+#endif
+
+/* ================================================================================
+ * 向量表偏移量 (App 需要: SCB->VTOR = FLASH_BASE | APP_VECT_TAB_OFFSET)
+ * 用于 sys_nvic_set_vector_table(FLASH_BASE_ADDR, APP_VECT_TAB_OFFSET)
+ * ================================================================================ */
+#define APP_VECT_TAB_OFFSET         (APP_BASE_ADDR - FLASH_BASE_ADDR)  /* 0x0000C000 */
+
+#endif /* __OTA_PARTITION_H */

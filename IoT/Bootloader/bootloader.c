@@ -1,0 +1,468 @@
+/**
+ ****************************************************************************************************
+ * @file        bootloader.c
+ * @brief       Bootloader 核心流程 — 检查 flag → 校验 CRC → 擦除/拷贝/验证 → 清除 flag → 跳转
+ * @note        裸机运行, 不依赖 FreeRTOS
+ *
+ *              流程:
+ *              bootloader_run()
+ *                ├─ init_hw()          硬件初始化 (时钟/LED/串口/CRC)
+ *                ├─ check_flag()       读 flag 页, 判断是否需要升级
+ *                ├─ verify_firmware()  CRC32 校验 Download 区固件
+ *                ├─ do_upgrade()       擦除 App → 拷贝 → 验证
+ *                ├─ clear_flag()       擦除 flag 页
+ *                └─ jump_to_app()      清理外设 → 跳转
+ *
+ *              错误处理: 任何步骤失败 → SOS LED + 串口输出 → 死循环
+ *              (Bootloader 不自动回滚到旧 App — 擦除是不可逆的)
+ ****************************************************************************************************
+ */
+
+#include "bootloader.h"
+#include "bootloader_debug.h"
+#include "bootloader_led.h"
+#include "bootloader_crc.h"
+#include "bootloader_flash.h"
+
+/* ---- 外部依赖 ---- */
+#include "./SYSTEM/sys/sys.h"
+
+/* ---- BSP W5500 RST 引脚定义 (最小化: 仅复位, 不初始化 SPI) ---- */
+#define W5500_RST_PORT     GPIOD
+#define W5500_RST_PIN      GPIO_PIN_6
+
+/* ================================================================================
+ * 全局状态
+ * ================================================================================ */
+
+volatile uint32_t g_bl_tick = 0;        /* SysTick 1ms 滴答 */
+static bl_state_t  g_state  = BL_STATE_INIT;
+static uint32_t    g_fac_us = 0;        /* 1us 时基乘数 (delay_init 计算) */
+
+/* ================================================================================
+ * 最小化延时实现 (不依赖 delay.c, 避免 FreeRTOS 依赖和 SysTick 冲突)
+ * ================================================================================ */
+
+/**
+ * @brief       初始化 SysTick 延时 (替代 delay_init)
+ * @param       sysclk: 系统时钟频率 Hz (如 72000000)
+ */
+static void bl_delay_init(uint32_t sysclk)
+{
+    SysTick->CTRL = 0;                                          /* 先关闭 SysTick */
+    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8);   /* HCLK/8 = 9MHz */
+    g_fac_us = sysclk / 8;                                      /* 1us 所需的计数值 */
+    SysTick->LOAD = (sysclk / 8) / 1000 - 1;                    /* 1ms 重载值 */
+    SysTick->VAL  = 0;
+    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
+}
+
+/**
+ * @brief       微秒级延时 (轮询, 不依赖中断)
+ */
+static void bl_delay_us(uint32_t nus)
+{
+    uint32_t ticks  = nus * g_fac_us;
+    uint32_t told   = SysTick->VAL;
+    uint32_t tnow;
+
+    while (1) {
+        tnow = SysTick->VAL;
+        if (tnow != told) {
+            uint32_t elapsed = (told >= tnow) ? (told - tnow) : (told + (SysTick->LOAD + 1) - tnow);
+            if (elapsed >= ticks) break;
+        }
+        told = tnow;
+    }
+}
+
+/**
+ * @brief       毫秒级延时 (基于 SysTick 中断 + g_bl_tick)
+ */
+static void bl_delay_ms(uint32_t nms)
+{
+    uint32_t target = g_bl_tick + nms;
+    while (g_bl_tick < target) {
+        /* 等待 SysTick_Handler 递增 g_bl_tick */
+    }
+}
+
+/* ================================================================================
+ * SysTick 中断处理
+ * ================================================================================ */
+
+void SysTick_Handler(void)
+{
+    g_bl_tick++;
+    HAL_IncTick();  /* Flash HAL 超时依赖 HAL_GetTick() */
+}
+
+/* ================================================================================
+ * 内部函数声明
+ * ================================================================================ */
+
+static void init_hw(void);
+static int  check_flag(uint32_t *out_size, uint32_t *out_crc);
+static int  verify_firmware(uint32_t fw_size, uint32_t expected_crc);
+static int  do_upgrade(uint32_t fw_size);
+static void clear_flag(void);
+static void jump_to_app(void) __attribute__((noreturn));
+static void error_halt(bl_status_t err);
+static void w5500_hardware_reset(void);
+
+/* ================================================================================
+ * 公共 API
+ * ================================================================================ */
+
+void bootloader_set_state(bl_state_t state)
+{
+    g_state = state;
+    bl_led_set_state(state);
+}
+
+bl_state_t bootloader_get_state(void)
+{
+    return g_state;
+}
+
+const char *bootloader_errstr(bl_status_t err)
+{
+    switch (err) {
+    case BL_OK:                 return "OK";
+    case BL_UPGRADING:          return "UPGRADING";
+    case BL_UPGRADE_DONE:       return "UPGRADE_DONE";
+    case BL_ERR_FLASH_ERASE:    return "FLASH_ERASE_FAILED";
+    case BL_ERR_FLASH_PROGRAM:  return "FLASH_PROGRAM_FAILED";
+    case BL_ERR_FLASH_VERIFY:   return "FLASH_VERIFY_FAILED";
+    case BL_ERR_CRC_MISMATCH:   return "CRC_MISMATCH";
+    case BL_ERR_INVALID_SIZE:   return "INVALID_FW_SIZE";
+    case BL_ERR_APP_INVALID:    return "APP_INVALID";
+    case BL_ERR_NO_FLAG:        return "NO_FLAG";
+    default:                    return "UNKNOWN";
+    }
+}
+
+/* ================================================================================
+ * 主入口
+ * ================================================================================ */
+
+void bootloader_run(void)
+{
+    uint32_t fw_size, fw_crc;
+    int ret;
+
+    /* ---- Step 0: 硬件初始化 ---- */
+    init_hw();
+
+    BL_LOG("Bootloader v%d.%d starting...", BL_VERSION_MAJOR, BL_VERSION_MINOR);
+    BL_LOG("Partition: BL=0x%08X(%uKB) App=0x%08X(%uKB) DL=0x%08X(%uKB)",
+           (unsigned)BOOTLOADER_BASE_ADDR, (unsigned)(BOOTLOADER_SIZE / 1024),
+           (unsigned)APP_BASE_ADDR, (unsigned)(APP_SIZE / 1024),
+           (unsigned)DOWNLOAD_BASE_ADDR, (unsigned)(DOWNLOAD_SIZE / 1024));
+    BL_LOG("Flag page: 0x%08X", (unsigned)FLAG_PAGE_BASE_ADDR);
+
+    /* ---- Step 1: 检查升级标志 ---- */
+    bootloader_set_state(BL_STATE_CHECK_FLAG);
+    ret = check_flag(&fw_size, &fw_crc);
+    if (ret == BL_ERR_NO_FLAG) {
+        /* 无升级 → 直接跳转 App */
+        BL_LOG("No upgrade flag, booting App...");
+        bootloader_set_state(BL_STATE_JUMP_TO_APP);
+        jump_to_app();
+        /* NOTREACHED */
+    }
+    if (ret < 0) {
+        error_halt((bl_status_t)ret);
+        /* NOTREACHED */
+    }
+
+    /* ---- Step 2: CRC32 校验 Download 区 ---- */
+    BL_LOG("Flag valid: size=%u CRC32=0x%08X", (unsigned)fw_size, (unsigned)fw_crc);
+    ret = verify_firmware(fw_size, fw_crc);
+    if (ret < 0) {
+        /* CRC 不匹配 → 清除 flag → 错误停机 */
+        BL_LOG("Firmware verification failed, erasing flag...");
+        clear_flag();
+        error_halt((bl_status_t)ret);
+        /* NOTREACHED */
+    }
+
+    /* ---- Step 3: 执行升级 ---- */
+    bootloader_set_state(BL_STATE_UPGRADING);
+    BL_LOG("Starting firmware upgrade...");
+    ret = do_upgrade(fw_size);
+    if (ret < 0) {
+        BL_LOG("Upgrade FAILED! code=%d (%s)", ret, bootloader_errstr((bl_status_t)ret));
+        error_halt((bl_status_t)ret);
+        /* NOTREACHED */
+    }
+
+    /* ---- Step 4: 清除 Flag ---- */
+    bootloader_set_state(BL_STATE_UPGRADE_DONE);
+    BL_LOG("Upgrade complete! Erasing flag page...");
+    clear_flag();
+
+    /* 短暂停留让用户看到完成指示 */
+    bl_delay_ms(1000);
+
+    /* ---- Step 5: 跳转 App ---- */
+    BL_LOG("Jumping to App at 0x%08X...", (unsigned)APP_BASE_ADDR);
+    jump_to_app();
+    /* NOTREACHED */
+}
+
+/* ================================================================================
+ * Step 0: 硬件初始化
+ * ================================================================================ */
+
+static void init_hw(void)
+{
+    /* 系统时钟: 72MHz (HSE + PLL x9, HSI 降级保护) */
+    HAL_Init();
+    sys_stm32_clock_init(RCC_PLL_MUL9);
+    bl_delay_init(72);
+
+    /* 注意: HAL_Init() 内部调用了 HAL_InitTick() 将 SysTick 配置为 1ms 中断
+     * 优先级为最低 (15), 符合 Cortex-M3 NVIC 规范 */
+
+    /* LED 指示 */
+    bl_led_init();
+    bootloader_set_state(BL_STATE_INIT);
+
+    /* 串口日志 */
+    bl_debug_init();
+
+    /* 硬件 CRC32 */
+    bl_crc32_init();
+}
+
+/* ================================================================================
+ * Step 1: 检查升级标志
+ * ================================================================================ */
+
+static int check_flag(uint32_t *out_size, uint32_t *out_crc)
+{
+    uint32_t magic   = bl_flash_read_flag_word(FLAG_WORD_MAGIC);
+    uint32_t fw_size = bl_flash_read_flag_word(FLAG_WORD_FW_SIZE);
+    uint32_t fw_crc  = bl_flash_read_flag_word(FLAG_WORD_FW_CRC32);
+    uint32_t status  = bl_flash_read_flag_word(FLAG_WORD_STATUS);
+
+    BL_LOG("Flag: magic=0x%08X size=%u CRC=0x%08X status=0x%08X",
+           (unsigned)magic, (unsigned)fw_size, (unsigned)fw_crc, (unsigned)status);
+
+    /* Magic 不匹配 → 无升级 */
+    if (magic != OTA_FLAG_MAGIC) {
+        BL_LOG("Flag magic mismatch (expected 0x%08X)", (unsigned)OTA_FLAG_MAGIC);
+        return BL_ERR_NO_FLAG;
+    }
+
+    /* 大小校验 */
+    if (fw_size == 0 || fw_size > DOWNLOAD_SIZE) {
+        BL_LOG("Invalid firmware size: %u (max %u)",
+               (unsigned)fw_size, (unsigned)DOWNLOAD_SIZE);
+        return BL_ERR_INVALID_SIZE;
+    }
+
+    /* 不允许升级状态为 ERROR 的固件 */
+    if (status == FLAG_STATUS_ERROR) {
+        BL_LOG("Flag status is ERROR, skipping...");
+        return BL_ERR_NO_FLAG;
+    }
+
+    *out_size = fw_size;
+    *out_crc  = fw_crc;
+    return 0;
+}
+
+/* ================================================================================
+ * Step 2: CRC32 校验 Download 区固件
+ * ================================================================================ */
+
+static int verify_firmware(uint32_t fw_size, uint32_t expected_crc)
+{
+    uint32_t computed_crc;
+
+    BL_LOG("Computing CRC32 of Download area...");
+    BL_LOG("  Range: 0x%08X ~ 0x%08X (%u bytes)",
+           (unsigned)DOWNLOAD_BASE_ADDR,
+           (unsigned)(DOWNLOAD_BASE_ADDR + fw_size),
+           (unsigned)fw_size);
+
+    computed_crc = bl_crc32_calculate(DOWNLOAD_BASE_ADDR, fw_size);
+
+    BL_LOG("  Expected: 0x%08X", (unsigned)expected_crc);
+    BL_LOG("  Computed: 0x%08X", (unsigned)computed_crc);
+
+    if (computed_crc != expected_crc) {
+        BL_LOG("CRC MISMATCH!");
+        return BL_ERR_CRC_MISMATCH;
+    }
+
+    BL_LOG("CRC32 verification PASSED");
+    return 0;
+}
+
+/* ================================================================================
+ * Step 3: 执行升级 (擦除 + 拷贝 + 验证)
+ * ================================================================================ */
+
+static int do_upgrade(uint32_t fw_size)
+{
+    int ret;
+
+    /* 3a. 拷贝 Download → App */
+    ret = bl_flash_copy_region(DOWNLOAD_BASE_ADDR, APP_BASE_ADDR, fw_size);
+    if (ret != 0) {
+        return ret;
+    }
+
+    /* 3b. 验证拷贝完整性 */
+    ret = bl_flash_verify_region(DOWNLOAD_BASE_ADDR, APP_BASE_ADDR, fw_size);
+    if (ret != 0) {
+        BL_LOG("UPGRADE: copy verification FAILED at offset %d", ret);
+        return BL_ERR_FLASH_VERIFY;
+    }
+
+    BL_LOG("UPGRADE: copy verified OK");
+    return 0;
+}
+
+/* ================================================================================
+ * Step 4: 清除 Flag
+ * ================================================================================ */
+
+static void clear_flag(void)
+{
+    int ret = bl_flash_erase_flag_page();
+    if (ret != 0) {
+        /* Flag 擦除失败不是致命错误 — 固件已正确写入 App 区
+         * 但下次上电 Bootloader 会再次尝试升级 (重复操作)
+         * 这是安全的, 因为升级操作是幂等的 */
+        BL_LOG("WARNING: flag erase failed, will re-upgrade on next boot");
+        BL_LOG("         (upgrade is idempotent, no risk of bricking)");
+    } else {
+        BL_LOG("Flag page erased successfully");
+    }
+}
+
+/* ================================================================================
+ * Step 5: 跳转 App
+ * ================================================================================ */
+
+static void jump_to_app(void)
+{
+    uint32_t app_msp;
+    uint32_t app_reset;
+    void (*app_entry)(void);
+
+    BL_LOG("Preparing to jump to App...");
+
+    /* 读取 App 向量表的前两个 32-bit 字 */
+    app_msp   = *(volatile uint32_t *)(APP_BASE_ADDR + 0);
+    app_reset = *(volatile uint32_t *)(APP_BASE_ADDR + 4);
+
+    BL_LOG("  App MSP  = 0x%08X", (unsigned)app_msp);
+    BL_LOG("  App Entry= 0x%08X", (unsigned)app_reset);
+
+    /* ---- 安全校验 ---- */
+
+    /* MSP 必须在 SRAM 范围内 (0x20000000 ~ 0x20010000) */
+    if (app_msp < 0x20000000UL || app_msp > 0x20010000UL) {
+        BL_LOG("INVALID App MSP: 0x%08X (not in SRAM)", (unsigned)app_msp);
+        error_halt(BL_ERR_APP_INVALID);
+        /* NOTREACHED */
+    }
+
+    /* Reset_Handler 必须在 Flash 范围内且 thumb 位为 1 */
+    if ((app_reset & 0x2FFE0000UL) != 0x08000000UL) {
+        BL_LOG("INVALID App Reset_Handler: 0x%08X", (unsigned)app_reset);
+        error_halt(BL_ERR_APP_INVALID);
+        /* NOTREACHED */
+    }
+
+    /* ---- 外设清理 ---- */
+
+    /* W5500 硬件复位: 确保 App 启动时 W5500 处于已知状态 */
+    w5500_hardware_reset();
+
+    /* 关全局中断 */
+    __disable_irq();
+
+    /* 停止 SysTick (App 会重新初始化) */
+    SysTick->CTRL = 0;
+
+    /* ---- 设置 App 运行环境 ---- */
+
+    /* 设主栈指针为 App 的初始 SP */
+    __set_MSP(app_msp);
+
+    /* 设向量表偏移到 App 区 */
+    sys_nvic_set_vector_table(FLASH_BASE_ADDR, APP_VECT_TAB_OFFSET);
+
+    /* 清除所有挂起的中断 */
+    {
+        uint32_t irq;
+        for (irq = 0; irq < 8; irq++) {
+            NVIC->ICPR[irq] = 0xFFFFFFFF;
+        }
+    }
+
+    BL_LOG("Jumping now...");
+
+    /* ---- 跳转 ---- */
+    app_entry = (void (*)(void))app_reset;
+    app_entry();
+
+    /* 永远不会执行到这里 */
+    while (1);
+}
+
+/* ================================================================================
+ * 错误处理
+ * ================================================================================ */
+
+static void error_halt(bl_status_t err)
+{
+    BL_LOG("========================================");
+    BL_LOG("BOOTLOADER ERROR: %s (code=%d)", bootloader_errstr(err), (int)err);
+    BL_LOG("System halted. Recovery options:");
+    BL_LOG("  1. Power-cycle to retry");
+    BL_LOG("  2. Re-flash via serial (USART1) or SWD");
+    BL_LOG("========================================");
+
+    bootloader_set_state(BL_STATE_ERROR);
+    bl_led_set_error((int8_t)err);
+
+    /* 死循环, LED 持续 SOS */
+    while (1) {
+        bl_led_update();
+        /* 简单忙等待 (LED 状态机需要 g_bl_tick 递增, SysTick 仍在运行) */
+    }
+}
+
+/* ================================================================================
+ * W5500 硬件复位 (最小化实现, 不依赖 w5500_port.c / FreeRTOS)
+ * ================================================================================ */
+
+static void w5500_hardware_reset(void)
+{
+    GPIO_InitTypeDef gpio_init = {0};
+
+    /* GPIOD 时钟 (PD6 = W5500 RST) */
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    /* PD6 推挽输出 + 上拉 */
+    gpio_init.Pin   = W5500_RST_PIN;
+    gpio_init.Mode  = GPIO_MODE_OUTPUT_PP;
+    gpio_init.Pull  = GPIO_PULLUP;
+    gpio_init.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(W5500_RST_PORT, &gpio_init);
+
+    /* RST 脉冲: 低 >500us → 高, 等待 10ms PLL 锁定 */
+    HAL_GPIO_WritePin(W5500_RST_PORT, W5500_RST_PIN, GPIO_PIN_RESET);
+    bl_delay_us(600);
+    HAL_GPIO_WritePin(W5500_RST_PORT, W5500_RST_PIN, GPIO_PIN_SET);
+    bl_delay_ms(10);
+
+    BL_LOG("W5500 HW reset done");
+}

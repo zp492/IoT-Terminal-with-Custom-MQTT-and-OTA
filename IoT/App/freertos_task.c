@@ -1,4 +1,5 @@
 #include "freertos_task.h"
+#include <string.h>
 #include "./SYSTEM/usart/usart.h"
 #include "./SYSTEM/delay/delay.h"
 #include "led.h"
@@ -143,7 +144,7 @@ void sensor_task(void *pvParameters)
     {
         printf("[SENSOR] DHT11 not found! (check PG11)\r\n");
     }
-    
+
     /* 等待传感器稳定 */
     vTaskDelay(pdMS_TO_TICKS(2000));
 
@@ -169,7 +170,7 @@ void sensor_task(void *pvParameters)
             lcd_show_string(10, 30, 240, 24, 24, "Temp: -- C    ", RED);
             lcd_show_string(10, 70, 240, 24, 24, "Humi: -- %    ", BLUE);
         }
-        
+
 
         /* 串口同步输出 */
         printf("[SENSOR] Temp=%dC  Humi=%d%%  \r\n",
