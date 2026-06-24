@@ -115,6 +115,7 @@ static void clear_flag(void);
 static void jump_to_app(void) __attribute__((noreturn));
 static void error_halt(bl_status_t err);
 static void w5500_hardware_reset(void);
+static void bl_read_fw_version(uint32_t base_addr, char *ver_buf, uint8_t buf_len);
 
 /* ================================================================================
  * 公共 API
@@ -204,8 +205,14 @@ void bootloader_run(void)
 
     /* ---- 发现新固件, 显示版本信息 + 确认/取消 ---- */
     {
+        char cur_ver[16], new_ver[16];
         bl_confirm_t choice;
-        bl_lcd_show_new_firmware("1.0", "1.2");
+
+        /* 从 App 区和 Download 区读取版本号 */
+        bl_read_fw_version(APP_BASE_ADDR,       cur_ver, sizeof(cur_ver));
+        bl_read_fw_version(DOWNLOAD_BASE_ADDR,  new_ver, sizeof(new_ver));
+
+        bl_lcd_show_new_firmware(cur_ver, new_ver);
         choice = bl_lcd_confirm_upgrade(10000);
 
         if (choice == BL_CONFIRM_SKIP) {
@@ -514,6 +521,51 @@ static void error_halt(bl_status_t err)
 
 /* ================================================================================
  * W5500 硬件复位 (最小化实现, 不依赖 w5500_port.c / FreeRTOS)
+ * ================================================================================ */
+
+/* ================================================================================
+ * 读取固件版本信息
+ * ================================================================================ */
+
+static void bl_read_fw_version(uint32_t base_addr, char *ver_buf, uint8_t buf_len)
+{
+    const fw_info_t *info;
+    uint32_t info_addr;
+
+    if (buf_len == 0) return;
+    ver_buf[0] = '\0';
+
+    info_addr = base_addr + FW_INFO_OFFSET;
+    info = (const fw_info_t *)(uintptr_t)info_addr;
+
+    /* 检查 magic 是否有效 */
+    if (info->magic == FW_INFO_MAGIC) {
+        /* 优先使用 version_str */
+        uint8_t i;
+        for (i = 0; i < buf_len - 1 && i < (FW_INFO_VERSION_STR_LEN - 1); i++) {
+            if (info->version_str[i] == '\0') break;
+            ver_buf[i] = info->version_str[i];
+        }
+        ver_buf[i] = '\0';
+
+        /* 如果 version_str 为空, 用数字拼接 */
+        if (ver_buf[0] == '\0') {
+            snprintf(ver_buf, buf_len, "%u.%u.%u",
+                     (unsigned)info->ver_major,
+                     (unsigned)info->ver_minor,
+                     (unsigned)info->ver_patch);
+        }
+    } else {
+        /* magic 不匹配 → 旧版固件或未写入, 显示 "?" */
+        snprintf(ver_buf, buf_len, "?");
+    }
+
+    BL_LOG("FW info at 0x%08X: magic=0x%08X ver=%s",
+           (unsigned)info_addr, (unsigned)info->magic, ver_buf);
+}
+
+/* ================================================================================
+ * W5500 硬件复位
  * ================================================================================ */
 
 static void w5500_hardware_reset(void)

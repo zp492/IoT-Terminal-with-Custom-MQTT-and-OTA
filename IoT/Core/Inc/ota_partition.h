@@ -102,4 +102,36 @@
  * ================================================================================ */
 #define APP_VECT_TAB_OFFSET         (APP_BASE_ADDR - FLASH_BASE_ADDR)  /* 0x0000C000 */
 
+/* ================================================================================
+ * 固件版本信息结构 (App 和 Download 分区内固定偏移处)
+ * --------------------------------------------------------------------------------
+ * 每个固件镜像在偏移 FW_INFO_OFFSET 处嵌入一个 fw_info_t 结构体.
+ * Bootloader 可从此处读取版本号用于 LCD 显示和版本比对.
+ *
+ * ARMCC5 放置方式:
+ *   const fw_info_t __attribute__((at(APP_BASE_ADDR + FW_INFO_OFFSET))) g_fw_info;
+ *
+ * 结构体大小: 64 字节 (预留扩展空间)
+ * ================================================================================ */
+#define FW_INFO_OFFSET              0x200UL             /* 从分区起始偏移 (在向量表之后) */
+#define FW_INFO_MAGIC               0x4657494EUL        /* "FWIN" — 固件信息有效标志 */
+#define FW_INFO_VERSION_STR_LEN     16                  /* 版本字符串最大长度 */
+#define FW_INFO_DATE_LEN            16                  /* 构建日期字符串最大长度 */
+
+typedef struct {
+    uint32_t magic;                                     /* FW_INFO_MAGIC, 用于验证结构有效 */
+    uint8_t  ver_major;                                 /* 主版本号 (如 1) */
+    uint8_t  ver_minor;                                 /* 次版本号 (如 2) */
+    uint8_t  ver_patch;                                 /* 补丁号   (如 0) */
+    uint8_t  reserved;                                  /* 保留, 对齐 */
+    char     version_str[FW_INFO_VERSION_STR_LEN];      /* 版本字符串 "1.2.0" */
+    char     build_date[FW_INFO_DATE_LEN];              /* 构建日期 "Jun 24 2026" */
+    uint32_t fw_bin_size;                               /* 固件 .bin 文件字节数 (0=未填写) */
+    uint32_t fw_bin_crc32;                              /* 固件 .bin 文件 CRC32   (0=未填写) */
+} fw_info_t;
+
+/* ---- 编译期校验 ---- */
+// #if sizeof(fw_info_t) > 64  // C 不允许编译期 sizeof, 运行时检查
+// #error "fw_info_t exceeds 64 bytes"
+
 #endif /* __OTA_PARTITION_H */
