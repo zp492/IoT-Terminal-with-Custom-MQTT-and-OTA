@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        main.c
+ * @author      zp492
  * @brief       Bootloader 入口 — 裸机, 无 FreeRTOS
  * @note        上电从 Reset_Handler → SystemInit() → __main → main()
  *              调用 bootloader_run() (永不返回)

@@ -33,7 +33,7 @@ extern SemaphoreHandle_t g_net_ready_sem;
  * ================================================================================ */
 
 #define MQTT_SOCKET            1               /* 独占 Socket 1 */
-#define MQTT_RECV_BUF_SIZE     512             /* 接收缓冲区 */
+#define MQTT_RECV_BUF_SIZE     2048            /* 接收缓冲区 (OTA 需 >1KB 块) */
 #define MQTT_SEND_BUF_SIZE     512             /* 发送缓冲区 (CONNECT ~300B / PUBLISH ~200B) */
 
 /* 时序参数 (ms) */

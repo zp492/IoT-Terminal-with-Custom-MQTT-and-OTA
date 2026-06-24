@@ -10,6 +10,7 @@
 #include "mqtt_wrapper.h"
 #include "onenet.h"
 #include "w5500_port.h"
+#include "ota_download.h"
 /*FreeRTOS*********************************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
@@ -272,9 +273,23 @@ void w5500_monitor_task(void *pvParameters)
  */
 static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
 {
+    /* ---- OTA 二进制帧检测 (magic = "OTAD") ---- */
+    if (len >= 4 && payload[0] == 'O' && payload[1] == 'T' &&
+                    payload[2] == 'A' && payload[3] == 'D') {
+        ota_handle_packet(payload, len);
+        return;
+    }
+
+    /* ---- JSON 消息: 先尝试 OTA 指令, 不匹配再走 LED ---- */
+    if (len > 0 && payload[0] == '{') {
+        ota_handle_packet(payload, len);
+        /* ota_handle_packet 内部 strstr 匹配 "ota_start"/"ota_end"/"ota_cancel",
+           不匹配则立即返回, 不影响后续 LED 命令处理 */
+    }
+
     printf("[MQTT] CMD: %.*s\r\n", len, payload);
 
-    /* 简单 JSON 匹配: {"led0":1} → LED0亮, {"led1":0} → LED1灭 */
+    /* LED 控制: {"led0":1} → LED0亮, {"led1":0} → LED1灭 */
     if (strstr((char *)payload, "\"led0\":0")) LED0(1);
     if (strstr((char *)payload, "\"led0\":1")) LED0(0);
     if (strstr((char *)payload, "\"led1\":0")) LED1(1);

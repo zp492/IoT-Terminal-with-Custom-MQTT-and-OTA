@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F103xE,USE_HAL_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers;..\..\Drivers\SYSTEM;..\..\Drivers\SYSTEM\sys;..\..\Drivers\SYSTEM\usart;..\..\Drivers\SYSTEM\delay;..\..\Core\Inc;..\..\BSP\Inc;..\..\Bootloader;..\..\FreeRTOS\include;..\..\FreeRTOS\portable\RVDS\ARM_CM3</IncludePath>
+              <IncludePath>..\..\Drivers\STM32F1xx_HAL_Driver\Inc;..\..\Drivers\CMSIS\Include;..\..\Drivers\CMSIS\Device\ST\STM32F1xx\Include;..\..\Drivers;..\..\Drivers\SYSTEM;..\..\Drivers\SYSTEM\sys;..\..\Drivers\SYSTEM\usart;..\..\Drivers\SYSTEM\delay;..\..\Core\Inc;..\..\BSP\Inc;..\..\Bootloader;..\..\FreeRTOS\include;..\..\FreeRTOS\portable\RVDS\ARM_CM3;..\..\BSP</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -424,6 +424,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\led.c</FilePath>
             </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\key.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -484,6 +494,21 @@
               <FileType>1</FileType>
               <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_dma.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f1xx_ll_fsmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_fsmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_hal_pwr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_pwr.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_hal_sram.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_sram.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -518,6 +543,11 @@
               <FileName>bootloader_debug.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Bootloader\bootloader_debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>bootloader_lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Bootloader\bootloader_lcd.c</FilePath>
             </File>
           </Files>
         </Group>

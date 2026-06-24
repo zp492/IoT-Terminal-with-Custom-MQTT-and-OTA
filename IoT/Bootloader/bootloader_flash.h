@@ -35,15 +35,15 @@ int bl_flash_erase_pages(uint32_t start_addr, uint32_t num_pages);
 int bl_flash_program_word(uint32_t addr, uint32_t data);
 
 /**
- * @brief       从源区域拷贝数据到目标区域 (先擦除, 再逐字编程)
+ * @brief       从源区域拷贝数据到目标区域 (逐页: 读→擦→写→验)
  * @param       src_addr: 源地址 (Flash 中, 4 字节对齐)
- * @param       dst_addr: 目标地址 (Flash 中, 4 字节对齐, 页对齐更佳)
+ * @param       dst_addr: 目标地址 (Flash 中, 页对齐)
  * @param       size_bytes: 拷贝字节数
+ * @param       progress_cb: 进度回调 (page, total), 可为 NULL
  * @retval      0 成功, <0 失败码
- * @note        先擦除 dst 区域, 再逐字从 src 读取 32-bit 编程到 dst
- *              尾部不足 4 字节用 0xFF 填充
  */
-int bl_flash_copy_region(uint32_t src_addr, uint32_t dst_addr, uint32_t size_bytes);
+int bl_flash_copy_region(uint32_t src_addr, uint32_t dst_addr, uint32_t size_bytes,
+                         void (*progress_cb)(uint32_t page, uint32_t total));
 
 /**
  * @brief       逐字节比对两个 Flash 区域

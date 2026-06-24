@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        bootloader.c
+ * @author      zp492
  * @brief       Bootloader 核心流程 — 检查 flag → 校验 CRC → 擦除/拷贝/验证 → 清除 flag → 跳转
  * @note        裸机运行, 不依赖 FreeRTOS
  *
@@ -23,6 +24,7 @@
 #include "bootloader_led.h"
 #include "bootloader_crc.h"
 #include "bootloader_flash.h"
+#include "bootloader_lcd.h"
 
 /* ---- 外部依赖 ---- */
 #include "./SYSTEM/sys/sys.h"
@@ -86,6 +88,10 @@ static void bl_delay_ms(uint32_t nms)
         /* 等待 SysTick_Handler 递增 g_bl_tick */
     }
 }
+
+/* ---- 兼容别名 (lcd.c 等 BSP 驱动调用 delay_us / delay_ms) ---- */
+void delay_us(uint32_t nus)   { bl_delay_us(nus); }
+void delay_ms(uint32_t nms)   { bl_delay_ms(nms); }
 
 /* ================================================================================
  * SysTick 中断处理
@@ -172,7 +178,13 @@ void bootloader_run(void)
         /* NOTREACHED */
     }
     if (ret < 0) {
-        error_halt((bl_status_t)ret);
+        /* Flag 参数非法 (例如 size 越界) → 擦除 Flag → 启动旧 App
+         * 此时 App 区完好, 无理由停机, 旧固件仍然可用 */
+        BL_LOG("Flag invalid (%s), erasing and booting old App...",
+               bootloader_errstr((bl_status_t)ret));
+        clear_flag();
+        bootloader_set_state(BL_STATE_JUMP_TO_APP);
+        jump_to_app();
         /* NOTREACHED */
     }
 
@@ -180,30 +192,54 @@ void bootloader_run(void)
     BL_LOG("Flag valid: size=%u CRC32=0x%08X", (unsigned)fw_size, (unsigned)fw_crc);
     ret = verify_firmware(fw_size, fw_crc);
     if (ret < 0) {
-        /* CRC 不匹配 → 清除 flag → 错误停机 */
-        BL_LOG("Firmware verification failed, erasing flag...");
+        BL_LOG("Firmware verification failed (%s), erasing flag and falling back...",
+               bootloader_errstr((bl_status_t)ret));
+        bl_lcd_show_upgrade_error(-4);
         clear_flag();
-        error_halt((bl_status_t)ret);
+        bl_lcd_wait_any_key();
+        bootloader_set_state(BL_STATE_JUMP_TO_APP);
+        jump_to_app();
         /* NOTREACHED */
     }
 
-    /* ---- Step 3: 执行升级 ---- */
+    /* ---- 发现新固件, 显示版本信息 + 确认/取消 ---- */
+    {
+        bl_confirm_t choice;
+        bl_lcd_show_new_firmware("1.0", "1.2");
+        choice = bl_lcd_confirm_upgrade(10000);
+
+        if (choice == BL_CONFIRM_SKIP) {
+            BL_LOG("User cancelled upgrade, erasing flag and booting old App...");
+            bl_lcd_show_upgrade_cancelled();
+            bl_delay_ms(2000);
+            clear_flag();
+            bootloader_set_state(BL_STATE_JUMP_TO_APP);
+            jump_to_app();
+            /* NOTREACHED */
+        }
+    }
+
+    /* ---- Step 3: 执行升级 (擦 App + 拷贝 + 验证) ---- */
     bootloader_set_state(BL_STATE_UPGRADING);
     BL_LOG("Starting firmware upgrade...");
     ret = do_upgrade(fw_size);
     if (ret < 0) {
         BL_LOG("Upgrade FAILED! code=%d (%s)", ret, bootloader_errstr((bl_status_t)ret));
-        error_halt((bl_status_t)ret);
+        bl_lcd_show_upgrade_error(ret);
+        bl_lcd_wait_any_key();
+        BL_LOG("Rebooting to retry...");
+        bl_delay_ms(500);
+        NVIC_SystemReset();
         /* NOTREACHED */
     }
 
     /* ---- Step 4: 清除 Flag ---- */
     bootloader_set_state(BL_STATE_UPGRADE_DONE);
     BL_LOG("Upgrade complete! Erasing flag page...");
+    bl_lcd_show_upgrade_done();
     clear_flag();
 
-    /* 短暂停留让用户看到完成指示 */
-    bl_delay_ms(1000);
+    bl_delay_ms(3000);
 
     /* ---- Step 5: 跳转 App ---- */
     BL_LOG("Jumping to App at 0x%08X...", (unsigned)APP_BASE_ADDR);
@@ -234,6 +270,9 @@ static void init_hw(void)
 
     /* 硬件 CRC32 */
     bl_crc32_init();
+
+    /* LCD 显示 (FSMC TFT) */
+    bl_lcd_init();
 }
 
 /* ================================================================================
@@ -303,6 +342,15 @@ static int verify_firmware(uint32_t fw_size, uint32_t expected_crc)
 }
 
 /* ================================================================================
+ * LCD 进度回调 (由 bl_flash_copy_region 每完成一页调用)
+ * ================================================================================ */
+
+static void upgrade_progress_cb(uint32_t page, uint32_t total)
+{
+    bl_lcd_update_progress(page, total);
+}
+
+/* ================================================================================
  * Step 3: 执行升级 (擦除 + 拷贝 + 验证)
  * ================================================================================ */
 
@@ -310,20 +358,44 @@ static int do_upgrade(uint32_t fw_size)
 {
     int ret;
 
-    /* 3a. 拷贝 Download → App */
-    ret = bl_flash_copy_region(DOWNLOAD_BASE_ADDR, APP_BASE_ADDR, fw_size);
+    bl_lcd_show_upgrading_start();
+
+    /* ----------------------------------------------------------------
+     * Step 3a: 逐页搬运 (每页: 读暂存区→擦App→写App→页内字节比对)
+     * ---------------------------------------------------------------- */
+    ret = bl_flash_copy_region(DOWNLOAD_BASE_ADDR, APP_BASE_ADDR, fw_size,
+                               upgrade_progress_cb);
     if (ret != 0) {
         return ret;
     }
 
-    /* 3b. 验证拷贝完整性 */
+    /* ----------------------------------------------------------------
+     * Step 3b: 回读校验 — App 区全量逐字节比对 Download 暂存区
+     *
+     *   从 App 区首字节 (0x0800C000) 到末尾, 逐一回读,
+     *   与 Download 区 (0x08046000) 对应位置的字节比对.
+     *   只有全部 232KB 的每一个比特都一致, 才返回成功.
+     *
+     *   这是 Flag 擦除前的最后一道关卡:
+     *   - 验证失败 → Flag 保留 → 软复位 → 下次上电重试
+     *   - 验证通过 → clear_flag() → jump_to_app()
+     * ---------------------------------------------------------------- */
+    BL_LOG("UPGRADE: starting full-image read-back verify...");
+    BL_LOG("  App:      0x%08X", (unsigned)APP_BASE_ADDR);
+    BL_LOG("  Download: 0x%08X", (unsigned)DOWNLOAD_BASE_ADDR);
+    BL_LOG("  Size:     %u bytes", (unsigned)fw_size);
+
     ret = bl_flash_verify_region(DOWNLOAD_BASE_ADDR, APP_BASE_ADDR, fw_size);
     if (ret != 0) {
-        BL_LOG("UPGRADE: copy verification FAILED at offset %d", ret);
+        BL_LOG("UPGRADE: read-back MISMATCH at offset %d", ret);
+        BL_LOG("  Expected (Download): 0x%02X",
+               *(volatile uint8_t *)(DOWNLOAD_BASE_ADDR + (uint32_t)ret));
+        BL_LOG("  Actual   (App):      0x%02X",
+               *(volatile uint8_t *)(APP_BASE_ADDR + (uint32_t)ret));
         return BL_ERR_FLASH_VERIFY;
     }
 
-    BL_LOG("UPGRADE: copy verified OK");
+    BL_LOG("UPGRADE: read-back verify PASSED - all %u bits match", (unsigned)(fw_size * 8));
     return 0;
 }
 
