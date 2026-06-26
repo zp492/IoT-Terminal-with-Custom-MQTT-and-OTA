@@ -161,7 +161,7 @@ python Tools/ota_push.py Output/f103_zj.hex
 ```json
 {
   "temp": 26,
-  "humi": 58，
+  "humi": 58
 }
 ```
 
