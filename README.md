@@ -2,7 +2,6 @@
 
 ### 传感器采集
 - **DHT11** 温湿度采集，每秒采样
-- **ADC3** 模拟量采集 (PF8 / CH6)
 - 传感器数据通过 FreeRTOS 消息队列发送到 MQTT 任务
 
 ### MQTT 通信
@@ -162,8 +161,7 @@ python Tools/ota_push.py Output/f103_zj.hex
 ```json
 {
   "temp": 26,
-  "humi": 58,
-  "adc": 2048
+  "humi": 58，
 }
 ```
 
