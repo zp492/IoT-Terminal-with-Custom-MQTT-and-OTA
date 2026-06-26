@@ -26,6 +26,9 @@ volatile uint8_t g_net_state = NET_STATE_DISCONNECTED;
 /* ---- 传感器消息队列 (sensor_task → mqtt_task) ---- */
 QueueHandle_t g_sensor_queue = NULL;
 
+/* ---- OTA 消息队列 (mqtt_task → ota_task) ---- */
+QueueHandle_t g_ota_queue = NULL;
+
 /*FreeRTOS配置*/
 
 /* START_TASK 任务 配置
@@ -40,14 +43,14 @@ TaskHandle_t start_task_handler;
  * 堆栈 256 words (1KB) — LCD 字符绘制 + DHT11/ADC 读取
  */
 #define SENSOR_STACK_SIZE 512
-#define SENSOR_TSAK_PROI  3
+#define SENSOR_TSAK_PROI  4
 TaskHandle_t sensor_task_handler;
 
 /* MQTT 任务 配置
  * 堆栈 1024 words (4KB) — MQTT 状态机 + JSON 组装 + 收发缓冲区
  */
 #define MQTT_STACK_SIZE 1024
-#define MQTT_TSAK_PROI  4
+#define MQTT_TSAK_PROI  3
 TaskHandle_t mqtt_task_handler;
 
 /* LED 任务 配置
@@ -60,11 +63,18 @@ TaskHandle_t led_task_handler;
 
 /* W5500 Monitor 任务 配置
  * 堆栈 128 words — 轮询 PHY 状态 + 维护信号量
- * 优先级低 (3), 仅比 LED 高, 不阻塞 MQTT/传感器
  */
 #define MONITOR_STACK_SIZE 128
-#define MONITOR_TSAK_PROI  4
+#define MONITOR_TSAK_PROI  3
 TaskHandle_t w5500_monitor_task_handler;
+
+/* OTA 任务 配置
+ * 堆栈 1024 words (4KB) — Flash 擦写 + CRC + LCD, 需要较大栈
+ * 优先级 2 (低于 MQTT=4, 高于 LED=1)
+ */
+#define OTA_STACK_SIZE  1024
+#define OTA_TSAK_PROI   2
+TaskHandle_t ota_task_handler;
 
 /**
  * @brief       FreeRTOS例程入口函数
@@ -76,8 +86,14 @@ void freertos_demo(void)
     /* 在调度器启动前创建内核对象 (不依赖任何任务) */
     g_sensor_queue   = xQueueCreate(SENSOR_QUEUE_LEN, sizeof(sensor_data_t));
     g_net_ready_sem  = xSemaphoreCreateBinary();
+    g_ota_queue      = xQueueCreate(OTA_QUEUE_LEN, sizeof(ota_queue_item_t));
+    printf("[INIT] ota_queue=%p len=%u item_sz=%u heap_free=%u\r\n",
+           g_ota_queue, OTA_QUEUE_LEN,
+           (unsigned)sizeof(ota_queue_item_t),
+           (unsigned)xPortGetFreeHeapSize());
     configASSERT(g_sensor_queue != NULL);
     configASSERT(g_net_ready_sem != NULL);
+    configASSERT(g_ota_queue != NULL);
 
     xTaskCreate(start_task,
                 "start_task",
@@ -116,6 +132,12 @@ void start_task(void *pvParameters)
                 NULL,
                 MONITOR_TSAK_PROI,
                 &w5500_monitor_task_handler);
+    xTaskCreate(ota_task,
+                "ota",
+                OTA_STACK_SIZE,
+                NULL,
+                OTA_TSAK_PROI,
+                &ota_task_handler);
     vTaskDelete(NULL);
     taskEXIT_CRITICAL(); // 退出临界区
 }
@@ -160,16 +182,20 @@ void sensor_task(void *pvParameters)
             sensor_data_t s = { .temp = temp, .humi = humi };
             xQueueSend(g_sensor_queue, &s, 0);  /* 非阻塞发送 */
 
-            snprintf(buf, sizeof(buf), "Temp: %d C    ", temp);
-            lcd_show_string(10, 30, 240, 24, 24, buf, RED);
-
-            snprintf(buf, sizeof(buf), "Humi: %d %%    ", humi);
-            lcd_show_string(10, 70, 240, 24, 24, buf, BLUE);
+            /* OTA 进行中时跳过 LCD, 避免与 OTA 进度条重叠 */
+            if (ota_get_state() == OTA_IDLE) {
+                snprintf(buf, sizeof(buf), "Temp: %d C    ", temp);
+                lcd_show_string(10, 30, 240, 24, 24, buf, RED);
+                snprintf(buf, sizeof(buf), "Humi: %d %%    ", humi);
+                lcd_show_string(10, 70, 240, 24, 24, buf, BLUE);
+            }
         }
         else
         {
-            lcd_show_string(10, 30, 240, 24, 24, "Temp: -- C    ", RED);
-            lcd_show_string(10, 70, 240, 24, 24, "Humi: -- %    ", BLUE);
+            if (ota_get_state() == OTA_IDLE) {
+                lcd_show_string(10, 30, 240, 24, 24, "Temp: -- C    ", RED);
+                lcd_show_string(10, 70, 240, 24, 24, "Humi: -- %    ", BLUE);
+            }
         }
 
 
@@ -276,15 +302,15 @@ static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
     /* ---- OTA 二进制帧检测 (magic = "OTAD") ---- */
     if (len >= 4 && payload[0] == 'O' && payload[1] == 'T' &&
                     payload[2] == 'A' && payload[3] == 'D') {
-        ota_handle_packet(payload, len);
-        return;
+        ota_handle_packet(payload, len, g_ota_queue);
+        return;  /* OTA 数据直接入队, 不走到 LED */
     }
 
-    /* ---- JSON 消息: 先尝试 OTA 指令, 不匹配再走 LED ---- */
+    /* ---- JSON 消息: 先尝试入队 OTA, 不匹配再走 LED ---- */
     if (len > 0 && payload[0] == '{') {
-        ota_handle_packet(payload, len);
-        /* ota_handle_packet 内部 strstr 匹配 "ota_start"/"ota_end"/"ota_cancel",
-           不匹配则立即返回, 不影响后续 LED 命令处理 */
+        ota_handle_packet(payload, len, g_ota_queue);
+        /* ota_handle_packet 内部检测 "ota_start/end/cancel" → 入队 → 立即返回
+           非 OTA 命令 → 忽略, 不影响后续 LED 处理 */
     }
 
     printf("[MQTT] CMD: %.*s\r\n", len, payload);
@@ -302,17 +328,60 @@ void mqtt_task(void *pvParameters)
 
     /* ---- 等待 PHY 链路就绪 (网线插入) ---- */
     printf("[MQTT] waiting for PHY link up...\r\n");
-    xSemaphoreTake(g_net_ready_sem, portMAX_DELAY); /* 阻塞直到 monitor 给信号量 */
+    xSemaphoreTake(g_net_ready_sem, portMAX_DELAY);
 
-    /* ---- 配置 OneNET 三元组 ---- */
+/* ================================================================================
+ * MQTT Broker: 1=test.mosquitto.org(测试), 0=OneNET(正式)
+ * ================================================================================ */
+#define MQTT_TEST_MODE  1
+
+#if MQTT_TEST_MODE
+    {
+        static mqtt_broker_cfg_t cfg;
+        cfg.server_ip[0] = 54;     /* test.mosquitto.org */
+        cfg.server_ip[1] = 36;
+        cfg.server_ip[2] = 178;
+        cfg.server_ip[3] = 49;
+        cfg.server_port  = 1883;
+        cfg.client_id    = "stm32_w5500_test";
+        cfg.username     = NULL;
+        cfg.password     = NULL;
+        cfg.keep_alive   = 60;
+        cfg.pub_topic    = "stm32/sensor";
+        cfg.sub_topic    = "stm32/ota";
+        cfg.build_payload = onenet_build_payload;
+
+        printf("[MQTT] TEST MODE: broker=hivemq.com (%d.%d.%d.%d)\r\n",
+               cfg.server_ip[0],cfg.server_ip[1],cfg.server_ip[2],cfg.server_ip[3]);
+        mqtt_task_run(&cfg, mqtt_on_cmd, g_sensor_queue);
+    }
+#else
     onenet_set_auth("507rVcegvD", "w5500",
         "version=2018-10-31&res=products%2F507rVcegvD%2Fdevices%2Fw5500&et=1865000000&method=md5&sign=Vgmx6XCq5rqBUERIzoV0zg%3D%3D");
 
-    /* ---- 用 OneNET 填充 Broker 配置 ---- */
-    static mqtt_broker_cfg_t cfg;              /* onenet_fill_cfg 填入静态 Topic 缓冲区 */
-    onenet_fill_cfg(&cfg);
+    {
+        static mqtt_broker_cfg_t cfg;
+        onenet_fill_cfg(&cfg);
+        cfg.build_payload = onenet_build_payload;
 
-    cfg.build_payload = onenet_build_payload;  /* 注册 OneNET JSON 构建回调 */
+        printf("[MQTT] PRODUCTION MODE: broker=OneNET\r\n");
+        mqtt_task_run(&cfg, mqtt_on_cmd, g_sensor_queue);
+    }
+#endif
+}
 
-    mqtt_task_run(&cfg, mqtt_on_cmd, g_sensor_queue);  /* 平台指令回调 + 传感器队列 */
+/**
+ * @brief       OTA 固件下载任务 (独立 FreeRTOS 任务)
+ * @note        优先级 2, 低于 MQTT(4). Flash 擦写在此任务上下文执行.
+ *              阻塞等待 OTA 队列消息, 收到后处理 Flash/CRC/Flag.
+ */
+void ota_task(void *pvParameters)
+{
+    (void)pvParameters;
+
+    printf("[OTA] task waiting for OTA queue...\r\n");
+    ota_task_run(g_ota_queue);
+
+    /* ota_task_run() 在 NVIC_SystemReset() 之前永不返回 */
+    vTaskDelete(NULL);
 }

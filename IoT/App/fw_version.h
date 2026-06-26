@@ -13,7 +13,7 @@
  * 版本号 (升级固件时修改这三个宏)
  * ================================================================================ */
 #define FW_VER_MAJOR  1
-#define FW_VER_MINOR  0
+#define FW_VER_MINOR  1
 #define FW_VER_PATCH  0
 
 #endif /* __FW_VERSION_H */

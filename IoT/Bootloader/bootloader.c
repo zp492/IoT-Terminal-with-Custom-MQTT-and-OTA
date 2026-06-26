@@ -52,29 +52,22 @@ static uint32_t    g_fac_us = 0;        /* 1us 时基乘数 (delay_init 计算) 
 static void bl_delay_init(uint32_t sysclk)
 {
     SysTick->CTRL = 0;                                          /* 先关闭 SysTick */
-    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8);   /* HCLK/8 = 9MHz */
-    g_fac_us = sysclk / 8;                                      /* 1us 所需的计数值 */
+    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8);   /* HCLK/8 */
+    g_fac_us = (sysclk / 8) / 1000000;                          /* SysTick 每微秒滴答数 */
     SysTick->LOAD = (sysclk / 8) / 1000 - 1;                    /* 1ms 重载值 */
     SysTick->VAL  = 0;
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
+    /* CLKSOURCE=0: HCLK/8 (ST 实现), TICKINT=1, ENABLE=1 */
+    SysTick->CTRL = SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
 
 /**
- * @brief       微秒级延时 (轮询, 不依赖中断)
+ * @brief       微秒级延时 (NOP 忙等, 72MHz 下 ~8 周期/循环 → 9 次/μs)
  */
 static void bl_delay_us(uint32_t nus)
 {
-    uint32_t ticks  = nus * g_fac_us;
-    uint32_t told   = SysTick->VAL;
-    uint32_t tnow;
-
-    while (1) {
-        tnow = SysTick->VAL;
-        if (tnow != told) {
-            uint32_t elapsed = (told >= tnow) ? (told - tnow) : (told + (SysTick->LOAD + 1) - tnow);
-            if (elapsed >= ticks) break;
-        }
-        told = tnow;
+    uint32_t i;
+    for (i = 0; i < nus * 9; i++) {
+        __NOP();
     }
 }
 
@@ -195,6 +188,8 @@ void bootloader_run(void)
     if (ret < 0) {
         BL_LOG("Firmware verification failed (%s), erasing flag and falling back...",
                bootloader_errstr((bl_status_t)ret));
+        __HAL_RCC_FSMC_CLK_ENABLE();
+        bl_lcd_init();
         bl_lcd_show_upgrade_error(-4);
         clear_flag();
         bl_lcd_wait_any_key();
@@ -203,10 +198,14 @@ void bootloader_run(void)
         /* NOTREACHED */
     }
 
-    /* ---- 发现新固件, 显示版本信息 + 确认/取消 ---- */
+    /* ---- 发现新固件, 初始化 LCD 并显示版本 ---- */
     {
         char cur_ver[16], new_ver[16];
         bl_confirm_t choice;
+
+        /* 此时才使能 FSMC + 初始化 LCD, 不干扰正常 App 启动 */
+        __HAL_RCC_FSMC_CLK_ENABLE();
+        bl_lcd_init();
 
         /* 从 App 区和 Download 区读取版本号 */
         bl_read_fw_version(APP_BASE_ADDR,       cur_ver, sizeof(cur_ver));
@@ -263,7 +262,7 @@ static void init_hw(void)
     /* 系统时钟: 72MHz (HSE + PLL x9, HSI 降级保护) */
     HAL_Init();
     sys_stm32_clock_init(RCC_PLL_MUL9);
-    bl_delay_init(72);
+    bl_delay_init(SystemCoreClock);  /* 单位: Hz, 72MHz = 72000000 */
 
     /* 注意: HAL_Init() 内部调用了 HAL_InitTick() 将 SysTick 配置为 1ms 中断
      * 优先级为最低 (15), 符合 Cortex-M3 NVIC 规范 */
@@ -278,8 +277,11 @@ static void init_hw(void)
     /* 硬件 CRC32 */
     bl_crc32_init();
 
-    /* LCD 显示 (FSMC TFT) */
-    bl_lcd_init();
+    /* 裸机环境: 手动开全局中断 (SysTick_Handler 依赖此位) */
+    __enable_irq();
+
+    /* LCD 延迟到检测到升级标志后才初始化,
+       避免 FSMC/GPIO 抢占影响 App 正常启动 */
 }
 
 /* ================================================================================
@@ -462,7 +464,9 @@ static void jump_to_app(void)
     /* ---- 外设清理 ---- */
 
     /* W5500 硬件复位: 确保 App 启动时 W5500 处于已知状态 */
+    BL_LOG("  Resetting W5500...");
     w5500_hardware_reset();
+    BL_LOG("  W5500 reset done");
 
     /* 关全局中断 */
     __disable_irq();
@@ -490,9 +494,17 @@ static void jump_to_app(void)
 
     /* ---- 跳转 ---- */
     app_entry = (void (*)(void))app_reset;
+
+    /* 跳转前最后一口气: 确保串口缓冲区清空 */
+    {
+        volatile uint32_t d = 0;
+        while (d < 100000) d++;  /* 等待 TX 完成 */
+    }
+
     app_entry();
 
-    /* 永远不会执行到这里 */
+    /* 如果执行到这里, 跳转失败 */
+    BL_LOG("FATAL: jump returned! Halting...");
     while (1);
 }
 
@@ -570,23 +582,29 @@ static void bl_read_fw_version(uint32_t base_addr, char *ver_buf, uint8_t buf_le
 
 static void w5500_hardware_reset(void)
 {
-    GPIO_InitTypeDef gpio_init = {0};
+    GPIO_InitTypeDef gpio_init;
+    BL_LOG("    W5500: step0");
 
     /* GPIOD 时钟 (PD6 = W5500 RST) */
     __HAL_RCC_GPIOD_CLK_ENABLE();
+    BL_LOG("    W5500: step1 clock done");
 
     /* PD6 推挽输出 + 上拉 */
     gpio_init.Pin   = W5500_RST_PIN;
     gpio_init.Mode  = GPIO_MODE_OUTPUT_PP;
     gpio_init.Pull  = GPIO_PULLUP;
     gpio_init.Speed = GPIO_SPEED_FREQ_LOW;
+    BL_LOG("    W5500: step2 before GPIO_Init");
     HAL_GPIO_Init(W5500_RST_PORT, &gpio_init);
+    BL_LOG("    W5500: step3 GPIO_Init done");
 
-    /* RST 脉冲: 低 >500us → 高, 等待 10ms PLL 锁定 */
+    /* RST 脉冲 */
     HAL_GPIO_WritePin(W5500_RST_PORT, W5500_RST_PIN, GPIO_PIN_RESET);
+    BL_LOG("    W5500: step4 RST low, before delay");
     bl_delay_us(600);
+    BL_LOG("    W5500: step5 delay done");
     HAL_GPIO_WritePin(W5500_RST_PORT, W5500_RST_PIN, GPIO_PIN_SET);
+    BL_LOG("    W5500: step6 RST high, before 10ms");
     bl_delay_ms(10);
-
-    BL_LOG("W5500 HW reset done");
+    BL_LOG("    W5500: step7 done");
 }

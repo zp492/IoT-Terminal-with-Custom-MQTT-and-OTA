@@ -60,6 +60,7 @@ enum {
 static uint8_t  g_state = STATE_DISCONNECTED;
 static uint8_t  g_rx_buf[MQTT_RECV_BUF_SIZE];
 static uint8_t  g_tx_buf[MQTT_SEND_BUF_SIZE];
+static uint16_t g_rx_pending = 0;  /* 上次未解析完的字节数 */
 
 static TickType_t g_last_ping;
 static TickType_t g_last_pub;
@@ -88,7 +89,8 @@ static void _cb_suback(uint16_t pkt_id, uint8_t ret_code) {
 /* PUBLISH 回调 → 丢 topic, 只传 payload 给上层 */
 static void _cb_publish(const char *topic, const uint8_t *payload, uint16_t len)
 {
-    (void)topic;
+    printf("[MQTT] PUBLISH topic=%.*s len=%u\r\n",
+           (topic ? (int)strlen(topic) : 0), (topic ? topic : "?"), len);
     if (g_on_cmd) {
         g_on_cmd(payload, len);
     }
@@ -203,9 +205,13 @@ static int8_t mqtt_full_connect(const mqtt_broker_cfg_t *cfg)
         }
     }
 
-    /* SUBACK 拒绝 (0x80) → 订阅失败, 但主连接正常, 继续 */
+    /* SUBACK 诊断 */
     if (g_suback_rc == 0x80) {
         printf("[MQTT] SUBACK rejected (0x80)\r\n");
+    } else if (g_suback_rc == 0xFF) {
+        printf("[MQTT] SUBACK timeout! (sub may not be active)\r\n");
+    } else {
+        printf("[MQTT] SUBACK ok, rc=0x%02X\r\n", g_suback_rc);
     }
 
     g_state = STATE_CONNECTED;
@@ -303,17 +309,26 @@ void mqtt_task_run(const mqtt_broker_cfg_t *cfg, mqtt_on_cmd_t on_cmd,
             }
 
             /* ---- 接收服务器下发 (非阻塞 500ms) ---- */
-            rx_ret = transport_recv(MQTT_SOCKET, g_rx_buf,
-                                    MQTT_RECV_BUF_SIZE, MQTT_LOOP_RECV_TO);
+            rx_ret = transport_recv(MQTT_SOCKET, g_rx_buf + g_rx_pending,
+                                    MQTT_RECV_BUF_SIZE - g_rx_pending,
+                                    MQTT_LOOP_RECV_TO);
 
             if (rx_ret > 0) {
-                /* 解析 → CONNACK/SUBACK/PUBLISH/PINGRESP 均在此处理 */
-                mqtt_parse(g_rx_buf, (uint16_t)rx_ret,
-                           NULL, _cb_publish, NULL);
-            } else if (rx_ret < 0) {
-                break;                              /* 连接断开 → 重连 */
-            }
-            /* rx_ret == 0: 超时, 无数据 → 继续 */
+                int32_t pos = 0, consumed;
+                uint16_t total = g_rx_pending + (uint16_t)rx_ret;
+                printf("[MQTT] +%ld (pend=%u total=%u)\r\n", rx_ret, g_rx_pending, total);
+                g_rx_pending = 0;
+                while (pos < total) {
+                    consumed = mqtt_parse(g_rx_buf + pos, total - pos, NULL, _cb_publish, NULL);
+                    if (consumed > 0) { pos += consumed; }
+                    else if (consumed == -1) {
+                        if (pos > 0) memmove(g_rx_buf, g_rx_buf + pos, total - pos);
+                        g_rx_pending = total - pos;
+                        printf("[MQTT] incomplete, save %u\r\n", g_rx_pending);
+                        break;
+                    } else { printf("[MQTT] err=%ld\r\n", consumed); break; }
+                }
+            } else if (rx_ret < 0) { g_rx_pending = 0; break; }
         }
 
         /* ================================================================

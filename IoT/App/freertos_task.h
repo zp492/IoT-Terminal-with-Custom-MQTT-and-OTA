@@ -41,4 +41,10 @@ void w5500_monitor_task(void *pvParameters);
 /* ---- 网络就绪信号量 (monitor_task 给, mqtt_task 等) ---- */
 extern SemaphoreHandle_t g_net_ready_sem;
 
+/* ---- OTA 消息队列 (mqtt_task → ota_task) ---- */
+extern QueueHandle_t g_ota_queue;
+
+/* ---- OTA 任务函数 ---- */
+void ota_task(void *pvParameters);
+
 #endif /* __FREERTOS_TASK_H */

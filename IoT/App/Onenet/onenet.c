@@ -3,7 +3,7 @@
  * @file        onenet.c
  * @brief       OneNET 云平台 MQTT 适配层 实现
  * @note        OneNET MQTT 接入文档:
- *              https://open.iot.10086.cn/doc/mqtt/book/protocol/auth.html
+ *              https://iot.10086.cn/doc/aiot/fuse/detail/920
  *
  *              三元组: Product ID / Device ID / Auth Token
  *

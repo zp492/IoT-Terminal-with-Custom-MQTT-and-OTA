@@ -15,6 +15,7 @@
 
 #include "transport.h"
 #include "socket.h"
+#include "w5500.h"           /* getSn_RX_RSR() */
 #include "./SYSTEM/delay/delay.h"
 #include "./SYSTEM/usart/usart.h"                   /* printf */
 
@@ -187,28 +188,29 @@ int32_t transport_recv(uint8_t sn, uint8_t *buf, uint16_t len,
         return -1;                                  /* 连接已断开 */
     }
 
-    /* ---- 2. 轮询等待数据就绪 ---- */
+    /* ---- 2. 轮询 SO_RECVBUF ---- */
     while (elapsed < timeout_ms) {
         getsockopt(sn, SO_RECVBUF, &rx_size);
-        if (rx_size > 0) {
-            break;                                  /* 有数据, 跳去读取 */
+        /* 直接读寄存器作为对比 (调试用) */
+        uint16_t raw = getSn_RX_RSR(sn);
+        if (raw > 0) {
+            if (rx_size == 0) {
+                printf("[TRANS] getsockopt=0 but raw=%u! using raw\r\n", raw);
+                rx_size = raw;
+            }
+            break;
         }
+        if (rx_size > 0) break;
 
         vTaskDelay(pdMS_TO_TICKS(TRANSPORT_RECV_POLL_MS));
         elapsed += TRANSPORT_RECV_POLL_MS;
     }
 
-    /* ---- 3. 超时无数据 ---- */
-    if (rx_size == 0) {
-        return 0;
-    }
+    if (rx_size == 0) return 0;
 
-    /* ---- 4. 限制单次读取长度 ---- */
     if (rx_size < len) len = rx_size;
-
     ret = recv(sn, buf, len);
-
-    return ret;                                     /* 实际读到的字节数 */
+    return ret;
 }
 
 /**

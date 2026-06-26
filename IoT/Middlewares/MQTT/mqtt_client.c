@@ -467,6 +467,8 @@ int32_t mqtt_parse(const uint8_t *data, uint16_t len,
 
         /* Topic 长度 (大端) */
         topic_len  = ((uint16_t)data[pos] << 8) | data[pos + 1];
+        printf("[MQTT-PARSE] pos=%u rem=%lu topic_len=%u\r\n",
+               pos, remaining, topic_len);
         pos += 2;
 
         if (pos + topic_len > len) return -1;       /* 数据不足 */
@@ -475,8 +477,8 @@ int32_t mqtt_parse(const uint8_t *data, uint16_t len,
         topic = (const char *)data + pos;
         pos += topic_len;
 
-        /* Payload = 剩余部分 */
-        payload_len = (uint16_t)((uint32_t)len - pos);
+        /* Payload = 当前包内剩余 (用 total_len 而非 len, 避免包含下一个包) */
+        payload_len = (uint16_t)(total_len - pos);
         payload = (payload_len > 0) ? (data + pos) : NULL;
 
         if (on_publish) {
