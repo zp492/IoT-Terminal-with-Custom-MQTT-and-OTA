@@ -203,7 +203,7 @@ python Tools/ota_push.py Output/f103_zj.hex
 - [GPIO_Pinout.md](Documents/GPIO_Pinout.md) — GPIO 引脚分配表
 - [MQTT_Call_Table.md](Documents/MQTT_Call_Table.md) — MQTT 协议栈回调/函数调用关系
 - [OTA_Implementation_Summary.md](Documents/OTA_Implementation_Summary.md) — OTA 完整实现总结（含联调踩坑）
-- [Debug_Log.md](Documents/Debug_Log.md) — 联调调试日志
+- IoT/Documents/Debug_Log.md — 联调调试日志
 
 ## 版本历史
 
