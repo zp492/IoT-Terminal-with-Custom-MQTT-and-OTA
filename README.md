@@ -76,7 +76,7 @@ IoT/
 ├── Drivers/                    # HAL 库 & CMSIS
 │   ├── STM32F1xx_HAL_Driver/
 │   ├── CMSIS/
-│   └── SYSTEM/                 # 正点原子系统组件 (delay/sys/usart)
+│   └── SYSTEM/                 # 正点原子组件基础上更新的系统组件 (delay/sys/usart)
 └── Output/                     # 分散加载文件 (.sct)
 ```
 
