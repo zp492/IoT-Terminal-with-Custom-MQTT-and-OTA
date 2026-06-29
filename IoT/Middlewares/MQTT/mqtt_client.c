@@ -414,7 +414,7 @@ int32_t mqtt_parse(const uint8_t *data, uint16_t len,
     uint32_t remaining;
     uint32_t total_len;
 
-    if (!data || len < 2) return -1;                /* 至少需要 2 字节 */
+    if (!data || len < 2) return -1;                /* 至少需要 2 字节，仅包含固定头和剩余长度 */
 
     /* ---- ① 解析固定头第 1 字节 ---- */
     pkt_type = (data[0] >> 4) & 0x0F;               /* bit7~4 = 报文类型 */
@@ -462,13 +462,11 @@ int32_t mqtt_parse(const uint8_t *data, uint16_t len,
         const char *topic;
         const uint8_t *payload;
         uint16_t payload_len;
-
+        /*Topic就有2byte的长度*/
         if (remaining < 2) return -2;
 
-        /* Topic 长度 (大端) */
+        /* 2byte Topic 长度 (大端) */
         topic_len  = ((uint16_t)data[pos] << 8) | data[pos + 1];
-        printf("[MQTT-PARSE] pos=%u rem=%lu topic_len=%u\r\n",
-               pos, remaining, topic_len);
         pos += 2;
 
         if (pos + topic_len > len) return -1;       /* 数据不足 */

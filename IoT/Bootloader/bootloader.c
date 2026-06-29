@@ -39,7 +39,6 @@
 
 volatile uint32_t g_bl_tick = 0;        /* SysTick 1ms 滴答 */
 static bl_state_t  g_state  = BL_STATE_INIT;
-static uint32_t    g_fac_us = 0;        /* 1us 时基乘数 (delay_init 计算) */
 
 /* ================================================================================
  * 最小化延时实现 (不依赖 delay.c, 避免 FreeRTOS 依赖和 SysTick 冲突)
@@ -53,7 +52,6 @@ static void bl_delay_init(uint32_t sysclk)
 {
     SysTick->CTRL = 0;                                          /* 先关闭 SysTick */
     HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8);   /* HCLK/8 */
-    g_fac_us = (sysclk / 8) / 1000000;                          /* SysTick 每微秒滴答数 */
     SysTick->LOAD = (sysclk / 8) / 1000 - 1;                    /* 1ms 重载值 */
     SysTick->VAL  = 0;
     /* CLKSOURCE=0: HCLK/8 (ST 实现), TICKINT=1, ENABLE=1 */
@@ -183,7 +181,8 @@ void bootloader_run(void)
     }
 
     /* ---- Step 2: CRC32 校验 Download 区 ---- */
-    BL_LOG("Flag valid: size=%u CRC32=0x%08X", (unsigned)fw_size, (unsigned)fw_crc);
+    BL_LOG("Flag valid: size=%u CRC32=0x%08X",
+           (unsigned)fw_size, (unsigned)fw_crc);
     ret = verify_firmware(fw_size, fw_crc);
     if (ret < 0) {
         BL_LOG("Firmware verification failed (%s), erasing flag and falling back...",
@@ -290,35 +289,28 @@ static void init_hw(void)
 
 static int check_flag(uint32_t *out_size, uint32_t *out_crc)
 {
-    uint32_t magic   = bl_flash_read_flag_word(FLAG_WORD_MAGIC);
-    uint32_t fw_size = bl_flash_read_flag_word(FLAG_WORD_FW_SIZE);
-    uint32_t fw_crc  = bl_flash_read_flag_word(FLAG_WORD_FW_CRC32);
-    uint32_t status  = bl_flash_read_flag_word(FLAG_WORD_STATUS);
+    volatile ota_flag_t *flag = OTA_FLAG;
 
-    BL_LOG("Flag: magic=0x%08X size=%u CRC=0x%08X status=0x%08X",
-           (unsigned)magic, (unsigned)fw_size, (unsigned)fw_crc, (unsigned)status);
+    BL_LOG("Flag: magic=0x%08X size=%u CRC=0x%08X",
+           (unsigned)flag->magic, (unsigned)flag->fw_size,
+           (unsigned)flag->fw_crc32);
 
     /* Magic 不匹配 → 无升级 */
-    if (magic != OTA_FLAG_MAGIC) {
+    if (flag->magic != OTA_FLAG_MAGIC) {
         BL_LOG("Flag magic mismatch (expected 0x%08X)", (unsigned)OTA_FLAG_MAGIC);
         return BL_ERR_NO_FLAG;
     }
 
     /* 大小校验 */
-    if (fw_size == 0 || fw_size > DOWNLOAD_SIZE) {
+    if (flag->fw_size == 0 || flag->fw_size > DOWNLOAD_SIZE) {
         BL_LOG("Invalid firmware size: %u (max %u)",
-               (unsigned)fw_size, (unsigned)DOWNLOAD_SIZE);
+               (unsigned)flag->fw_size, (unsigned)DOWNLOAD_SIZE);
         return BL_ERR_INVALID_SIZE;
     }
 
     /* 不允许升级状态为 ERROR 的固件 */
-    if (status == FLAG_STATUS_ERROR) {
-        BL_LOG("Flag status is ERROR, skipping...");
-        return BL_ERR_NO_FLAG;
-    }
-
-    *out_size = fw_size;
-    *out_crc  = fw_crc;
+    *out_size = flag->fw_size;
+    *out_crc  = flag->fw_crc32;
     return 0;
 }
 
@@ -583,28 +575,20 @@ static void bl_read_fw_version(uint32_t base_addr, char *ver_buf, uint8_t buf_le
 static void w5500_hardware_reset(void)
 {
     GPIO_InitTypeDef gpio_init;
-    BL_LOG("    W5500: step0");
 
     /* GPIOD 时钟 (PD6 = W5500 RST) */
     __HAL_RCC_GPIOD_CLK_ENABLE();
-    BL_LOG("    W5500: step1 clock done");
 
     /* PD6 推挽输出 + 上拉 */
     gpio_init.Pin   = W5500_RST_PIN;
     gpio_init.Mode  = GPIO_MODE_OUTPUT_PP;
     gpio_init.Pull  = GPIO_PULLUP;
     gpio_init.Speed = GPIO_SPEED_FREQ_LOW;
-    BL_LOG("    W5500: step2 before GPIO_Init");
     HAL_GPIO_Init(W5500_RST_PORT, &gpio_init);
-    BL_LOG("    W5500: step3 GPIO_Init done");
 
     /* RST 脉冲 */
     HAL_GPIO_WritePin(W5500_RST_PORT, W5500_RST_PIN, GPIO_PIN_RESET);
-    BL_LOG("    W5500: step4 RST low, before delay");
     bl_delay_us(600);
-    BL_LOG("    W5500: step5 delay done");
     HAL_GPIO_WritePin(W5500_RST_PORT, W5500_RST_PIN, GPIO_PIN_SET);
-    BL_LOG("    W5500: step6 RST high, before 10ms");
     bl_delay_ms(10);
-    BL_LOG("    W5500: step7 done");
 }

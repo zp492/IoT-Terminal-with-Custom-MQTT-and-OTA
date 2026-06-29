@@ -12,7 +12,6 @@
 #include "./SYSTEM/delay/delay.h"
 #include "led.h"
 #include "key.h"
-#include "./MALLOC/malloc.h"
 #include "freertos_task.h"
 #include "w5500_port.h"
 #include "ota_partition.h"

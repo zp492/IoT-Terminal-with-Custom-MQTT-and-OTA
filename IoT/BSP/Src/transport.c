@@ -191,11 +191,9 @@ int32_t transport_recv(uint8_t sn, uint8_t *buf, uint16_t len,
     /* ---- 2. 轮询 SO_RECVBUF ---- */
     while (elapsed < timeout_ms) {
         getsockopt(sn, SO_RECVBUF, &rx_size);
-        /* 直接读寄存器作为对比 (调试用) */
         uint16_t raw = getSn_RX_RSR(sn);
         if (raw > 0) {
             if (rx_size == 0) {
-                printf("[TRANS] getsockopt=0 but raw=%u! using raw\r\n", raw);
                 rx_size = raw;
             }
             break;

@@ -321,8 +321,8 @@ void mqtt_task_run(const mqtt_broker_cfg_t *cfg, mqtt_on_cmd_t on_cmd,
                 while (pos < total) {
                     consumed = mqtt_parse(g_rx_buf + pos, total - pos, NULL, _cb_publish, NULL);
                     if (consumed > 0) { pos += consumed; }
-                    else if (consumed == -1) {
-                        if (pos > 0) memmove(g_rx_buf, g_rx_buf + pos, total - pos);
+                    else if (consumed == -1) {/* 数据不足 */
+                        if (pos > 0) memmove(g_rx_buf, g_rx_buf + pos, total - pos);/* 移动到开头 */
                         g_rx_pending = total - pos;
                         printf("[MQTT] incomplete, save %u\r\n", g_rx_pending);
                         break;

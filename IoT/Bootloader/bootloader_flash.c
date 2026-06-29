@@ -47,7 +47,7 @@ int bl_flash_erase_pages(uint32_t start_addr, uint32_t num_pages)
 
     BL_LOG("ERASE: 0x%08X, %u page(s)", (unsigned)start_addr, (unsigned)num_pages);
 
-    erase_init.TypeErase   = FLASH_TYPEERASE_PAGES;//页擦除
+    erase_init.TypeErase   = FLASH_TYPEERASE_PAGES;
     erase_init.Banks       = FLASH_BANK_1;
     erase_init.PageAddress = start_addr;
     erase_init.NbPages     = num_pages;
@@ -265,19 +265,3 @@ int bl_flash_erase_flag_page(void)
     return ret;
 }
 
-/**
- * @brief       读取 Flag 页中指定 Word 的值
- * @param       word_index: 0=magic, 1=fw_size, 2=fw_crc32, 3=status
- * @retval      Word 值 (Flash 直接读取)
- */
-uint32_t bl_flash_read_flag_word(uint32_t word_index)
-{
-    uint32_t addr;
-
-    if (word_index >= FLAG_TOTAL_WORDS) {
-        return 0xFFFFFFFF;  /* 越界返回擦除态 */
-    }
-
-    addr = FLAG_PAGE_BASE_ADDR + word_index * sizeof(uint32_t);
-    return *(volatile uint32_t *)addr;
-}

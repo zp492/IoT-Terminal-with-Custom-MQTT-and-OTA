@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        bootloader.h
+ * @author      zp492
  * @brief       Bootloader 公共接口 — 状态枚举、常量、主流程入口
  * @note        裸机运行 (无 FreeRTOS), 上电后检查升级标志 → 校验 → 升级 → 跳转 App
  *
@@ -11,11 +12,10 @@
  *              - bootloader_led   非阻塞 LED 状态指示
  *              - bootloader_debug 串口日志输出
  *
- *              Flag 结构 (写入 FLAG_PAGE_BASE_ADDR, 4 x uint32_t):
- *              Word 0: magic    = OTA_FLAG_MAGIC
- *              Word 1: fw_size  = 固件字节数
- *              Word 2: fw_crc32 = CRC32
- *              Word 3: status   = FLAG_STATUS_*
+ *              Flag 结构 (ota_flag_t 映射到 0x0800B000):
+ *              flag->magic   = OTA_FLAG_MAGIC
+ *              flag->fw_size = 固件字节数
+ *              flag->fw_crc32 = CRC32
  ****************************************************************************************************
  */
 

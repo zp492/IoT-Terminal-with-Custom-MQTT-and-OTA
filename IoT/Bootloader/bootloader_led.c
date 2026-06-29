@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        bootloader_led.c
+ * @author      zp492
  * @brief       非阻塞 LED 状态机实现
  * @note        基于 g_bl_tick (SysTick 1ms) 驱动, 不阻塞 Bootloader 主流程
  *              LED0(0)=ON, LED0(1)=OFF (活低)

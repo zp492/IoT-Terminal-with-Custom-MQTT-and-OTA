@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        bootloader_debug.h
+ * @author      zp492
  * @brief       串口日志输出模块
  * @note        复用 Drivers/SYSTEM/usart/usart.c 的 printf 重定向 (USART1, 115200 8N1)
  *              通过 BL_DEBUG_ENABLE 宏可在编译期静默所有日志

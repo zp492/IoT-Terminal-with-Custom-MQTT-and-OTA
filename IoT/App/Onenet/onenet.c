@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        onenet.c
+ * @author      zp492
  * @brief       OneNET 云平台 MQTT 适配层 实现
  * @note        OneNET MQTT 接入文档:
  *              https://iot.10086.cn/doc/aiot/fuse/detail/920

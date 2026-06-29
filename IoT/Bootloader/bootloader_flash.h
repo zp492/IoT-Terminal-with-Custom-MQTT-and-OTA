@@ -1,6 +1,7 @@
 /**
  ****************************************************************************************************
  * @file        bootloader_flash.h
+ * @author      zp492
  * @brief       Flash 操作封装 — 页擦除、字编程、区域拷贝、字节比对、Flag 页管理
  * @note        所有操作均加超时保护, 失败时返回负值错误码
  *              STM32F103ZE: Flash 页大小 2KB, 仅支持 16-bit 半字硬件编程
@@ -59,12 +60,5 @@ int bl_flash_verify_region(uint32_t src_addr, uint32_t dst_addr, uint32_t size_b
  * @retval      0 成功, <0 失败
  */
 int bl_flash_erase_flag_page(void);
-
-/**
- * @brief       读取 Flag 页中的指定 Word
- * @param       word_index: FLAG_WORD_MAGIC / SIZE / CRC32 / STATUS
- * @retval      Word 值
- */
-uint32_t bl_flash_read_flag_word(uint32_t word_index);
 
 #endif /* __BOOTLOADER_FLASH_H */

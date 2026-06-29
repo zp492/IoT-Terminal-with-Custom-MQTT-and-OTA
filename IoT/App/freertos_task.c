@@ -4,7 +4,6 @@
 #include "./SYSTEM/delay/delay.h"
 #include "led.h"
 #include "key.h"
-#include "./MALLOC/malloc.h"
 #include "dht11.h"
 #include "lcd.h"
 #include "mqtt_wrapper.h"
@@ -102,12 +101,12 @@ void freertos_demo(void)
                 START_TSAK_PROI,
                 &start_task_handler);
 
-    vTaskStartScheduler(); /*开启任务调度器*/
+    vTaskStartScheduler();
 }
 
 void start_task(void *pvParameters)
 {
-    taskENTER_CRITICAL(); // 进入临界区
+    taskENTER_CRITICAL();
     xTaskCreate(sensor_task,
                 "sensor",
                 SENSOR_STACK_SIZE,
@@ -139,7 +138,7 @@ void start_task(void *pvParameters)
                 OTA_TSAK_PROI,
                 &ota_task_handler);
     vTaskDelete(NULL);
-    taskEXIT_CRITICAL(); // 退出临界区
+    taskEXIT_CRITICAL();
 }
 
 /**
@@ -155,7 +154,7 @@ void sensor_task(void *pvParameters)
 
     /* ---- 初始化传感器外设 ---- */
     lcd_init();                             /* LCD 屏初始化 (FSMC) */
-    lcd_clear(WHITE);                       /* 清屏白色背景 */
+    lcd_clear(WHITE);
     lcd_show_string(10, 10, 240, 24, 24, "Sensor Init...", BLUE);
 
     printf("[SENSOR] DHT11 init...\r\n");
@@ -198,10 +197,6 @@ void sensor_task(void *pvParameters)
             }
         }
 
-
-        /* 串口同步输出 */
-        printf("[SENSOR] Temp=%dC  Humi=%d%%  \r\n",
-               temp, humi);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

@@ -232,8 +232,6 @@ static void ota_process_start_json(const uint8_t *payload, uint16_t len)
         return;
     }
 
-    OTA_LOG("erase done, ready for data");
-
     /* LCD 提示 */
     lcd_clear(WHITE);
     lcd_show_string(0, 40, 800, 32, 24, (char *)"Downloading Firmware...", BLUE);
@@ -434,8 +432,8 @@ static void ota_verify_and_finish(void)
 static void ota_write_flag(void)
 {
     FLASH_EraseInitTypeDef ei;
-    uint32_t pe, i;
-    uint32_t words[FLAG_TOTAL_WORDS];
+    uint32_t pe;
+    ota_flag_t flag_buf;
 
     /* 擦 Flag 页 */
     ei.TypeErase   = FLASH_TYPEERASE_PAGES;
@@ -450,17 +448,21 @@ static void ota_write_flag(void)
         return;
     }
 
-    words[FLAG_WORD_MAGIC]    = OTA_FLAG_MAGIC;
-    words[FLAG_WORD_FW_SIZE]  = g_fw_total_size;
-    words[FLAG_WORD_FW_CRC32] = g_fw_expected_crc;
-    words[FLAG_WORD_STATUS]   = FLAG_STATUS_PENDING;
+    /* 准备 Flag 结构体 → 逐字段写入 Flash */
+    flag_buf.magic    = OTA_FLAG_MAGIC;
+    flag_buf.fw_size  = g_fw_total_size;
+    flag_buf.fw_crc32 = g_fw_expected_crc;
 
-    for (i = 0; i < FLAG_TOTAL_WORDS; i++) {
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
-                              FLAG_PAGE_BASE_ADDR + i * 4, words[i]) != HAL_OK) {
-            HAL_FLASH_Lock();
-            ota_set_error(OTA_ERR_FLAG_WRITE);
-            return;
+    {
+        uint32_t *pw = (uint32_t *)&flag_buf;
+        uint32_t i;
+        for (i = 0; i < sizeof(flag_buf) / 4; i++) {
+            if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
+                                  FLAG_PAGE_BASE_ADDR + i * 4, pw[i]) != HAL_OK) {
+                HAL_FLASH_Lock();
+                ota_set_error(OTA_ERR_FLAG_WRITE);
+                return;
+            }
         }
     }
     HAL_FLASH_Lock();

@@ -77,17 +77,6 @@ static int8_t tcp_client_connect(void)
     printf("[TCP] socket opened (sn=%d, local_port=%d)\r\n",
            TCP_SOCKET_NUM, TCP_LOCAL_PORT);
 
-    /* 诊断: 打印本机网络配置 */
-    {
-        wiz_NetInfo net_info;
-        wizchip_getnetinfo(&net_info);
-        printf("[TCP] self: MAC=%02X:%02X:%02X:%02X:%02X:%02X  IP=%d.%d.%d.%d  GW=%d.%d.%d.%d\r\n",
-               net_info.mac[0], net_info.mac[1], net_info.mac[2],
-               net_info.mac[3], net_info.mac[4], net_info.mac[5],
-               net_info.ip[0], net_info.ip[1], net_info.ip[2], net_info.ip[3],
-               net_info.gw[0], net_info.gw[1], net_info.gw[2], net_info.gw[3]);
-    }
-
     /* 2. 连接服务器 (阻塞, W5x00版 connect 接受3个参数) */
     ret = connect(TCP_SOCKET_NUM, g_server_ip, g_server_port);
 
@@ -276,11 +265,7 @@ void tcp_client_run(void *pvParameters)
                                            "W5500 TCP Heartbeat #%lu\r\n",
                                            (unsigned long)g_send_count++);
 
-                int32_t ret = tcp_client_send(g_tx_buf, (uint16_t)msg_len);
-                if (ret > 0)
-                {
-                    printf("[TCP] sent: %s", g_tx_buf);
-                }
+                tcp_client_send(g_tx_buf, (uint16_t)msg_len);
             }
 
             /* ---- 接收处理 ---- */
@@ -288,7 +273,6 @@ void tcp_client_run(void *pvParameters)
             if (rx_len > 0)
             {
                 g_rx_buf[rx_len] = '\0'; /* 添加字符串结尾 */
-                printf("[TCP] recv (%ld bytes): %s\r\n", rx_len, g_rx_buf);
 
                 /* TODO: 在此解析服务器下发的指令 */
             }
