@@ -42,14 +42,14 @@ TaskHandle_t start_task_handler;
  * 堆栈 256 words (1KB) — LCD 字符绘制 + DHT11/ADC 读取
  */
 #define SENSOR_STACK_SIZE 512
-#define SENSOR_TSAK_PROI  2
+#define SENSOR_TSAK_PROI 2
 TaskHandle_t sensor_task_handler;
 
 /* MQTT 任务 配置
  * 堆栈 1024 words (4KB) — MQTT 状态机 + JSON 组装 + 收发缓冲区
  */
 #define MQTT_STACK_SIZE 1024
-#define MQTT_TSAK_PROI  4
+#define MQTT_TSAK_PROI 4
 TaskHandle_t mqtt_task_handler;
 
 /* LED 任务 配置
@@ -57,22 +57,22 @@ TaskHandle_t mqtt_task_handler;
  * 优先级最低 (4), 不影响传感器和 MQTT
  */
 #define LED_STACK_SIZE 96
-#define LED_TSAK_PROI  1
+#define LED_TSAK_PROI 1
 TaskHandle_t led_task_handler;
 
 /* W5500 Monitor 任务 配置
  * 堆栈 128 words — 轮询 PHY 状态 + 维护信号量
  */
 #define MONITOR_STACK_SIZE 128
-#define MONITOR_TSAK_PROI  2
+#define MONITOR_TSAK_PROI 2
 TaskHandle_t w5500_monitor_task_handler;
 
 /* OTA 任务 配置
  * 堆栈 1024 words (4KB) — Flash 擦写 + CRC + LCD, 需要较大栈
  * 优先级 2 (低于 MQTT=4, 高于 LED=1)
  */
-#define OTA_STACK_SIZE  1024
-#define OTA_TSAK_PROI   3
+#define OTA_STACK_SIZE 1024
+#define OTA_TSAK_PROI 3
 TaskHandle_t ota_task_handler;
 
 /**
@@ -83,9 +83,9 @@ TaskHandle_t ota_task_handler;
 void freertos_demo(void)
 {
     /* 在调度器启动前创建内核对象 (不依赖任何任务) */
-    g_sensor_queue   = xQueueCreate(SENSOR_QUEUE_LEN, sizeof(sensor_data_t));
-    g_net_ready_sem  = xSemaphoreCreateBinary();
-    g_ota_queue      = xQueueCreate(OTA_QUEUE_LEN, sizeof(ota_queue_item_t));
+    g_sensor_queue = xQueueCreate(SENSOR_QUEUE_LEN, sizeof(sensor_data_t));
+    g_net_ready_sem = xSemaphoreCreateBinary();
+    g_ota_queue = xQueueCreate(OTA_QUEUE_LEN, sizeof(ota_queue_item_t));
     printf("[INIT] ota_queue=%p len=%u item_sz=%u heap_free=%u\r\n",
            g_ota_queue, OTA_QUEUE_LEN,
            (unsigned)sizeof(ota_queue_item_t),
@@ -153,7 +153,7 @@ void sensor_task(void *pvParameters)
     (void)pvParameters;
 
     /* ---- 初始化传感器外设 ---- */
-    lcd_init();                             /* LCD 屏初始化 (FSMC) */
+    lcd_init(); /* LCD 屏初始化 (FSMC) */
     lcd_clear(WHITE);
     lcd_show_string(10, 10, 240, 24, 24, "Sensor Init...", BLUE);
 
@@ -178,11 +178,12 @@ void sensor_task(void *pvParameters)
         /* 读取 DHT11 (失败则显示 --) */
         if (dht11_read_data(&temp, &humi) == 0)
         {
-            sensor_data_t s = { .temp = temp, .humi = humi };
-            xQueueSend(g_sensor_queue, &s, 0);  /* 非阻塞发送 */
+            sensor_data_t s = {.temp = temp, .humi = humi};
+            xQueueSend(g_sensor_queue, &s, 0); /* 非阻塞发送 */
 
             /* OTA 进行中时跳过 LCD, 避免与 OTA 进度条重叠 */
-            if (ota_get_state() == OTA_IDLE) {
+            if (ota_get_state() == OTA_IDLE)
+            {
                 snprintf(buf, sizeof(buf), "Temp: %d C    ", temp);
                 lcd_show_string(10, 30, 240, 24, 24, buf, RED);
                 snprintf(buf, sizeof(buf), "Humi: %d %%    ", humi);
@@ -191,12 +192,12 @@ void sensor_task(void *pvParameters)
         }
         else
         {
-            if (ota_get_state() == OTA_IDLE) {
+            if (ota_get_state() == OTA_IDLE)
+            {
                 lcd_show_string(10, 30, 240, 24, 24, "Temp: -- C    ", RED);
                 lcd_show_string(10, 70, 240, 24, 24, "Humi: -- %    ", BLUE);
             }
         }
-
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -215,20 +216,25 @@ void led_task(void *pvParameters)
 
     while (1)
     {
-        switch (g_net_state) {
+        switch (g_net_state)
+        {
 
         case NET_STATE_DISCONNECTED:
             /* LED1 灭, LED0 慢闪 (1s 周期) */
             LED1(1);
-            LED0(0); vTaskDelay(pdMS_TO_TICKS(500));
-            LED0(1); vTaskDelay(pdMS_TO_TICKS(500));
+            LED0(0);
+            vTaskDelay(pdMS_TO_TICKS(500));
+            LED0(1);
+            vTaskDelay(pdMS_TO_TICKS(500));
             break;
 
         case NET_STATE_CONNECTING:
             /* LED1 快闪 (200ms), LED0 灭 */
             LED0(1);
-            LED1(0); vTaskDelay(pdMS_TO_TICKS(100));
-            LED1(1); vTaskDelay(pdMS_TO_TICKS(100));
+            LED1(0);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            LED1(1);
+            vTaskDelay(pdMS_TO_TICKS(100));
             break;
 
         case NET_STATE_CONNECTED:
@@ -239,7 +245,8 @@ void led_task(void *pvParameters)
             break;
 
         default:
-            LED0(1); LED1(1);
+            LED0(1);
+            LED1(1);
             vTaskDelay(pdMS_TO_TICKS(500));
             break;
         }
@@ -259,7 +266,7 @@ void led_task(void *pvParameters)
  */
 void w5500_monitor_task(void *pvParameters)
 {
-    uint8_t last_link = 0xFF;  /* 初始哨兵值, 确保首次变化触发 */
+    uint8_t last_link = 0xFF; /* 初始哨兵值, 确保首次变化触发 */
     uint8_t curr_link;
 
     (void)pvParameters;
@@ -268,17 +275,19 @@ void w5500_monitor_task(void *pvParameters)
     {
         curr_link = (w5500_get_link_status() == PHY_LINK_ON) ? 1 : 0;
 
-        if (curr_link) {
+        if (curr_link)
+        {
             /* 链路正常: 每轮都给信号量 (若已为 1 则为空操作)
                确保 MQTT 任务每次 take 后, 下一周期即可再次 take */
             xSemaphoreGive(g_net_ready_sem);
         }
 
         /* 网线拔出 (1→0 跳变) */
-        if (!curr_link && last_link) {
+        if (!curr_link && last_link)
+        {
             /* 消费信号量, 下次 MQTT 尝试连接时阻塞 */
-            xSemaphoreTake(g_net_ready_sem, 0);     /* 非阻塞 take */
-            g_net_state = NET_STATE_DISCONNECTED;   /* 通知 LED */
+            xSemaphoreTake(g_net_ready_sem, 0);   /* 非阻塞 take */
+            g_net_state = NET_STATE_DISCONNECTED; /* 通知 LED */
             printf("[MONITOR] Link DOWN -> net lost\r\n");
         }
 
@@ -296,13 +305,15 @@ static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
 {
     /* ---- OTA 二进制帧检测 (magic = "OTAD") ---- */
     if (len >= 4 && payload[0] == 'O' && payload[1] == 'T' &&
-                    payload[2] == 'A' && payload[3] == 'D') {
+        payload[2] == 'A' && payload[3] == 'D')
+    {
         ota_handle_packet(payload, len, g_ota_queue);
-        return;  /* OTA 数据直接入队, 不走到 LED */
+        return; /* OTA 数据直接入队, 不走到 LED */
     }
 
     /* ---- JSON 消息: 先尝试入队 OTA, 不匹配再走 LED ---- */
-    if (len > 0 && payload[0] == '{') {
+    if (len > 0 && payload[0] == '{')
+    {
         ota_handle_packet(payload, len, g_ota_queue);
         /* ota_handle_packet 内部检测 "ota_start/end/cancel" → 入队 → 立即返回
            非 OTA 命令 → 忽略, 不影响后续 LED 处理 */
@@ -311,10 +322,14 @@ static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
     printf("[MQTT] CMD: %.*s\r\n", len, payload);
 
     /* LED 控制: {"led0":1} → LED0亮, {"led1":0} → LED1灭 */
-    if (strstr((char *)payload, "\"led0\":0")) LED0(1);
-    if (strstr((char *)payload, "\"led0\":1")) LED0(0);
-    if (strstr((char *)payload, "\"led1\":0")) LED1(1);
-    if (strstr((char *)payload, "\"led1\":1")) LED1(0);
+    if (strstr((char *)payload, "\"led0\":0"))
+        LED0(1);
+    if (strstr((char *)payload, "\"led0\":1"))
+        LED0(0);
+    if (strstr((char *)payload, "\"led1\":0"))
+        LED1(1);
+    if (strstr((char *)payload, "\"led1\":1"))
+        LED1(0);
 }
 
 void mqtt_task(void *pvParameters)
@@ -328,31 +343,31 @@ void mqtt_task(void *pvParameters)
 /* ================================================================================
  * MQTT Broker: 1=test.mosquitto.org(测试), 0=OneNET(正式)
  * ================================================================================ */
-#define MQTT_TEST_MODE  1
+#define MQTT_TEST_MODE 1
 
 #if MQTT_TEST_MODE
     {
         static mqtt_broker_cfg_t cfg;
-        cfg.server_ip[0] = 54;     /* test.mosquitto.org */
+        cfg.server_ip[0] = 54; /* test.mosquitto.org */
         cfg.server_ip[1] = 36;
         cfg.server_ip[2] = 178;
         cfg.server_ip[3] = 49;
-        cfg.server_port  = 1883;
-        cfg.client_id    = "stm32_w5500_test";
-        cfg.username     = NULL;
-        cfg.password     = NULL;
-        cfg.keep_alive   = 60;
-        cfg.pub_topic    = "stm32/sensor";
-        cfg.sub_topic    = "stm32/ota";
+        cfg.server_port = 1883;
+        cfg.client_id = "stm32_w5500_test";
+        cfg.username = NULL;
+        cfg.password = NULL;
+        cfg.keep_alive = 60;
+        cfg.pub_topic = "stm32/sensor";
+        cfg.sub_topic = "stm32/ota";
         cfg.build_payload = onenet_build_payload;
 
         printf("[MQTT] TEST MODE: broker=hivemq.com (%d.%d.%d.%d)\r\n",
-               cfg.server_ip[0],cfg.server_ip[1],cfg.server_ip[2],cfg.server_ip[3]);
+               cfg.server_ip[0], cfg.server_ip[1], cfg.server_ip[2], cfg.server_ip[3]);
         mqtt_task_run(&cfg, mqtt_on_cmd, g_sensor_queue);
     }
 #else
     onenet_set_auth("507rVcegvD", "w5500",
-        "version=2018-10-31&res=products%2F507rVcegvD%2Fdevices%2Fw5500&et=1865000000&method=md5&sign=Vgmx6XCq5rqBUERIzoV0zg%3D%3D");
+                    "version=2018-10-31&res=products%2F507rVcegvD%2Fdevices%2Fw5500&et=1865000000&method=md5&sign=Vgmx6XCq5rqBUERIzoV0zg%3D%3D");
 
     {
         static mqtt_broker_cfg_t cfg;
@@ -391,5 +406,5 @@ void ota_task(void *pvParameters)
  * ================================================================================ */
 void vApplicationIdleHook(void)
 {
-    __WFI();  /* Wait For Interrupt — 休眠直到下一个中断 */
+    __WFI(); /* Wait For Interrupt — 休眠直到下一个中断 */
 }
