@@ -42,14 +42,14 @@ TaskHandle_t start_task_handler;
  * 堆栈 256 words (1KB) — LCD 字符绘制 + DHT11/ADC 读取
  */
 #define SENSOR_STACK_SIZE 512
-#define SENSOR_TSAK_PROI  4
+#define SENSOR_TSAK_PROI  2
 TaskHandle_t sensor_task_handler;
 
 /* MQTT 任务 配置
  * 堆栈 1024 words (4KB) — MQTT 状态机 + JSON 组装 + 收发缓冲区
  */
 #define MQTT_STACK_SIZE 1024
-#define MQTT_TSAK_PROI  3
+#define MQTT_TSAK_PROI  4
 TaskHandle_t mqtt_task_handler;
 
 /* LED 任务 配置
@@ -64,7 +64,7 @@ TaskHandle_t led_task_handler;
  * 堆栈 128 words — 轮询 PHY 状态 + 维护信号量
  */
 #define MONITOR_STACK_SIZE 128
-#define MONITOR_TSAK_PROI  3
+#define MONITOR_TSAK_PROI  2
 TaskHandle_t w5500_monitor_task_handler;
 
 /* OTA 任务 配置
@@ -72,7 +72,7 @@ TaskHandle_t w5500_monitor_task_handler;
  * 优先级 2 (低于 MQTT=4, 高于 LED=1)
  */
 #define OTA_STACK_SIZE  1024
-#define OTA_TSAK_PROI   2
+#define OTA_TSAK_PROI   3
 TaskHandle_t ota_task_handler;
 
 /**
@@ -379,4 +379,17 @@ void ota_task(void *pvParameters)
 
     /* ota_task_run() 在 NVIC_SystemReset() 之前永不返回 */
     vTaskDelete(NULL);
+}
+
+/* ================================================================================
+ * 低功耗 Idle Hook: 所有任务阻塞时 CPU 自动进入 WFI 休眠
+ *
+ * 效果: 传感器 1s/次, MQTT 500ms/轮询, LED 250ms/次 — 大量空闲时间
+ *       空闲期 CPU 执行 WFI 指令, 停止取指, 功耗显著下降
+ *       任意中断 (SysTick 1ms / W5500 以太网) 自动唤醒
+ *       无需手动调用, FreeRTOS 调度器在无就绪任务时自动触发
+ * ================================================================================ */
+void vApplicationIdleHook(void)
+{
+    __WFI();  /* Wait For Interrupt — 休眠直到下一个中断 */
 }

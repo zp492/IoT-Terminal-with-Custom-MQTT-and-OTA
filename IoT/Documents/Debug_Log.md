@@ -1,6 +1,6 @@
 # IoT 项目总调试记录
 
-> 测试平台：STM32F103ZET6 + W5500 + 正点原子 800×480 TFT-LCD (SSD1963, FSMC)
+> 测试平台：STM32F103ZET6 + W5500 + 正点原子 800×480 TFT-LCD (ILI9341, FSMC)
 >
 > 覆盖范围：FreeRTOS 基础架构 → MQTT 通信 → Bootloader 裸机 → OTA 联调
 

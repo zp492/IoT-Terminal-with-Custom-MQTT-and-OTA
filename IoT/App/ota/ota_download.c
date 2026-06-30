@@ -19,6 +19,32 @@
 /* FreeRTOS */
 #include "task.h"
 
+/* ---- MQTT 任务句柄 (OTA 激活时挂起, 完成时恢复) ---- */
+extern TaskHandle_t mqtt_task_handler;
+static TaskHandle_t ota_self = NULL;
+static unsigned portBASE_TYPE ota_orig_prio = 2;
+
+/* OTA 激活: 挂起 MQTT + OTA 升最高 (用于长时间擦除, 期间无数据接收) */
+static void ota_takeover(void)
+{
+    if (mqtt_task_handler) vTaskSuspend(mqtt_task_handler);
+    if (ota_self) vTaskPrioritySet(ota_self, configMAX_PRIORITIES - 1);
+}
+
+/* OTA 半释放: 恢复 MQTT (数据接收需要), OTA 保持最高优先级处理队列 */
+static void ota_resume_mqtt(void)
+{
+    if (mqtt_task_handler) vTaskResume(mqtt_task_handler);
+    /* OTA 保持最高优先级: 从队列取到数据后立即处理, 不会被 MQTT 抢占 */
+}
+
+/* OTA 休眠: 降回原优先级 + 恢复 MQTT (出错或取消时) */
+static void ota_release(void)
+{
+    if (ota_self) vTaskPrioritySet(ota_self, ota_orig_prio);
+    if (mqtt_task_handler) vTaskResume(mqtt_task_handler);
+}
+
 #define OTA_LOG(fmt, ...)  printf("[OTA] " fmt "\r\n", ##__VA_ARGS__)
 
 /* ---- OTA 二进制帧: [OTAD][seq:2B BE][data] ---- */
@@ -89,7 +115,9 @@ void ota_task_run(QueueHandle_t ota_queue)
 {
     ota_queue_item_t item;
 
-    OTA_LOG("OTA task started, waiting for commands...");
+    ota_self = xTaskGetCurrentTaskHandle();
+    ota_orig_prio = uxTaskPriorityGet(ota_self);
+    OTA_LOG("OTA task started (pri=%u), waiting for commands...", ota_orig_prio);
 
     while (1) {
         /* 阻塞等待 OTA 数据包 */
@@ -217,11 +245,14 @@ static void ota_process_start_json(const uint8_t *payload, uint16_t len)
 
     OTA_LOG("start: size=%lu CRC=0x%08lX", parsed_size, parsed_crc);
 
+    /* 接管: 挂起 MQTT + OTA 升最高 (擦除期间无数据接收, 无需 MQTT) */
+    ota_takeover();
+
     /* 初始化 CRC 外设 */
     __HAL_RCC_CRC_CLK_ENABLE();
     g_crc_handle.Instance = CRC;
 
-    /* ---- 重操作: 擦除 Download 区 (耗时 4~5 秒, 在 OTA 任务中执行) ---- */
+    /* ---- 擦除 Download 区 (耗时 4~5 秒, MQTT 已挂起) ---- */
     g_state = OTA_ERASING;
     ota_notify_progress();
 
@@ -238,6 +269,7 @@ static void ota_process_start_json(const uint8_t *payload, uint16_t len)
     lcd_show_string(0, 100, 800, 24, 16, (char *)"DO NOT POWER OFF!", RED);
 
     g_state = OTA_RECEIVING;
+    ota_resume_mqtt();  /* 恢复 MQTT (数据到来需要它), OTA 保持最高优先级处理队列 */
     ota_notify_progress();
 }
 
@@ -332,6 +364,7 @@ static void ota_process_end(void)
 static void ota_process_cancel(void)
 {
     OTA_LOG("cancelled by platform");
+    ota_release();  /* 恢复 MQTT, OTA 降回原优先级 */
     g_state = OTA_IDLE;
     g_err   = OTA_ERR_NONE;
     ota_notify_progress();
@@ -484,6 +517,7 @@ static void ota_write_flag(void)
 static void ota_set_error(ota_err_t err)
 {
     char buf[48];
+    ota_release();  /* 恢复 MQTT, OTA 降回原优先级 */
     g_state = OTA_ERROR;
     g_err   = err;
     OTA_LOG("ERROR: %s (code=%d)", ota_errstr(err), (int)err);

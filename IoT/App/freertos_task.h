@@ -45,6 +45,9 @@ extern SemaphoreHandle_t g_net_ready_sem;
 /* ---- OTA 消息队列 (mqtt_task → ota_task) ---- */
 extern QueueHandle_t g_ota_queue;
 
+/* ---- MQTT 任务句柄 (OTA 激活时用于挂起/恢复) ---- */
+extern TaskHandle_t mqtt_task_handler;
+
 /* ---- OTA 任务函数 ---- */
 void ota_task(void *pvParameters);
 
