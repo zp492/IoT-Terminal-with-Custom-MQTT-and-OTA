@@ -21,6 +21,7 @@ SemaphoreHandle_t g_net_ready_sem = NULL;
 
 /* ---- 网络状态 (mqtt_wrapper 更新, led_task 读取) ---- */
 volatile uint8_t g_net_state = NET_STATE_DISCONNECTED;
+volatile uint8_t g_led_alt_mode = 0;   /* 1=交替闪烁, 0=网络状态指示 */
 
 /* ---- 传感器消息队列 (sensor_task → mqtt_task) ---- */
 QueueHandle_t g_sensor_queue = NULL;
@@ -216,6 +217,13 @@ void led_task(void *pvParameters)
 
     while (1)
     {
+        /* 交替闪烁模式: LED0/LED1 每 500ms 交替 */
+        if (g_led_alt_mode) {
+            LED0(0); LED1(1); vTaskDelay(pdMS_TO_TICKS(500));
+            LED0(1); LED1(0); vTaskDelay(pdMS_TO_TICKS(500));
+            continue;
+        }
+
         switch (g_net_state)
         {
 
@@ -330,6 +338,12 @@ static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
         LED1(1);
     if (strstr((char *)payload, "\"led1\":1"))
         LED1(0);
+
+    /* LED 交替闪烁: {"led_alt":1} 开 / {"led_alt":0} 关 */
+    if (strstr((char *)payload, "\"led_alt\":1"))
+        g_led_alt_mode = 1;
+    if (strstr((char *)payload, "\"led_alt\":0"))
+        g_led_alt_mode = 0;
 }
 
 void mqtt_task(void *pvParameters)
@@ -343,7 +357,7 @@ void mqtt_task(void *pvParameters)
 /* ================================================================================
  * MQTT Broker: 1=test.mosquitto.org(测试), 0=OneNET(正式)
  * ================================================================================ */
-#define MQTT_TEST_MODE 1
+#define MQTT_TEST_MODE 0
 
 #if MQTT_TEST_MODE
     {

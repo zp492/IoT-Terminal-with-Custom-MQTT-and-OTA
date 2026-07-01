@@ -19,6 +19,9 @@
 /* NET_STATE_* 宏定义见 mqtt_wrapper.h */
 extern volatile uint8_t g_net_state;
 
+/* ---- LED 交替闪烁模式标志 ---- */
+extern volatile uint8_t g_led_alt_mode;
+
 /* ---- 传感器数据结构 ---- */
 typedef struct {
     uint8_t temp;       /* 温度 (℃) */
