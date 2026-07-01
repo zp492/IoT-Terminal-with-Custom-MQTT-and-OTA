@@ -1,6 +1,6 @@
 # IoT 项目总调试记录
 
-> 测试平台：STM32F103ZET6 + W5500 + 正点原子 800×480 TFT-LCD (ILI9341, FSMC)
+> 测试平台：STM32F103ZET6 + W5500 + 正点原子 2.8寸 TFT-LCD (320×240, ILI9341/ST7789, FSMC)
 >
 > 覆盖范围：FreeRTOS 基础架构 → MQTT 通信 → Bootloader 裸机 → OTA 联调
 
@@ -334,6 +334,151 @@ SysTick->CTRL = SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 
 ---
 
+### Bug 3.4：`_cb_publish` 函数签名与 `mqtt_on_publish_t` 不兼容
+
+#### 现象
+
+编译警告：
+```
+argument of type "void (*)(const char *, const uint8_t *, uint16_t)"
+is incompatible with parameter of type "mqtt_on_publish_t"
+```
+
+#### 根因
+
+`_cb_publish` 定义缺少 `topic_len` 参数。`mqtt_on_publish_t` 要求 4 个参数：
+
+```c
+// 类型定义 (mqtt_client.h)
+typedef void (*mqtt_on_publish_t)(const char *topic, uint16_t topic_len,
+                                   const uint8_t *payload, uint16_t payload_len);
+
+// Bug: 缺少 topic_len, 只有 3 个参数
+static void _cb_publish(const char *topic, const uint8_t *payload, uint16_t len);
+```
+
+虽只是 warning 且函数体内用 `strlen(topic)` 取长度，但函数指针类型不匹配是 UB（未定义行为），不同调用约定下可能破坏栈帧。
+
+#### 修复
+
+补齐 `topic_len` 参数，用 `topic_len` 替代 `strlen(topic)`：
+
+```c
+static void _cb_publish(const char *topic, uint16_t topic_len,
+                        const uint8_t *payload, uint16_t payload_len)
+```
+
+#### 教训
+
+函数指针类型必须严格匹配——C 编译器对此只给 warning，但 ABI 层面参数个数/类型不匹配会破坏调用栈。
+
+---
+
+### Bug 3.5：SysTick 三次重配导致多处死循环（核心死机根因）
+
+#### 现象
+
+正常启动（无升级标志）时串口输出停在 `[BL] Resetting W5500...`，系统死机。
+
+OTA 升级路径（有升级标志）时串口输出停在 `[BL] CRC32 verification PASSED`，LCD 初始化时死机。
+
+两条路径死在不同位置，但实际是同一个根因。
+
+#### 根因
+
+`init_hw()` 中 SysTick 被三次配置：
+
+```
+HAL_Init()
+  └─ HAL_InitTick() → SysTick_Config()
+       设置 SysTick: CLKSOURCE=1(HCLK), TICKINT=1, ENABLE=1
+
+sys_stm32_clock_init(RCC_PLL_MUL9)
+  └─ HAL_RCC_ClockConfig() → 重新配置系统时钟
+       此过程中 HCLK 可能短暂变化或停止
+
+bl_delay_init(SystemCoreClock)
+  └─ SysTick->CTRL=0 → 停止
+     HAL_SYSTICK_CLKSourceConfig(HCLK_DIV8)
+     SysTick->CTRL = TICKINT|ENABLE   → 重新启动, CLKSOURCE=0(HCLK/8)
+```
+
+三次配时钟 + 两次配 SysTick 的序列，在某些芯片/条件下导致 SysTick 中断不触发。`g_bl_tick` 永远为 0，所有依赖 `bl_delay_ms` 的代码全部死循环：
+
+- **正常启动**：`jump_to_app()` → `w5500_hardware_reset()` → `bl_delay_ms(10)` 💀
+- **升级路径**：`bl_lcd_init()` → `lcd_init()` → `delay_ms(50)` 💀
+- **升级确认**：`bl_lcd_confirm_upgrade()` → 50ms 轮询循环 💀
+
+#### 修复
+
+将 `bl_delay_ms` 改为纯 NOP 忙等，彻底消除 SysTick 依赖：
+
+```c
+// 修复前：依赖 SysTick 中断
+static void bl_delay_ms(uint32_t nms)
+{
+    uint32_t target = g_bl_tick + nms;
+    while (g_bl_tick < target) { /* SysTick 不触发 → 死循环 */ }
+}
+
+// 修复后：纯 NOP 忙等
+static void bl_delay_ms(uint32_t nms)
+{
+    bl_delay_us(nms * 1000);
+}
+```
+
+#### 教训
+
+- **同一个硬件（SysTick）被多个初始化函数反复配置是危险模式**——每层初始化都假定自己是唯一使用者
+- 在裸机环境中，延时尽量用 NOP 忙等——不够精确但不会死
+- 临界区（关中断）操作在初始化序列中要确保在最后才调用
+
+---
+
+### Bug 3.6：LCD 布局全按 800×480 编写，实际屏幕为 2.8 寸 320×240
+
+#### 现象
+
+OTA 升级确认画面中，"Current:" 和 "New:" 标签可见，但版本号（v1.2.0）不显示。串口输出确认版本读取正确（`magic=0x4657494E ver=1.2.0`）。
+
+#### 根因
+
+`bootloader_lcd.c` 所有坐标和字号按 800×480 设计。版本号字符串画在 `x=390`，而实际屏幕只有 320 像素宽——文字画在屏幕右边界之外，用户看不到。
+
+```
+屏幕实际:  0 ────────────── 320px
+版本号:                  390 ──→ 根本不在屏幕内
+```
+
+连带的布局问题：
+- 标题 `(0, 40)` 字号 24，在 240 高的屏幕上占了 1/6
+- `INFO_Y=120` 在 240 屏上偏下
+- `HINT_Y=400` 完全在屏幕外（320>240）
+- 进度条 `PROGRESS_Y=280` 也在屏幕外
+
+#### 修复
+
+全部布局参数适配 320×240：
+
+| 参数 | 修复前 (800×480) | 修复后 (320×240) |
+|------|-----------------|-----------------|
+| `LCD_W/LCD_H` | 800/480 | 320/240 |
+| `TITLE_Y` | 40 | 10 |
+| `INFO_Y` | 120 | 55 |
+| `PROGRESS_Y` | 280 | 130 |
+| `HINT_Y` | 400 | 200 |
+| 标题字号 | 24 | 16 |
+| 版本 x 坐标 | 390 | 90 |
+
+#### 教训
+
+- 屏幕尺寸是硬件常量，应该在项目初期确定并全局使用宏，而不是在每个文件里硬编码
+- 坐标超出屏幕不会报错——LCD 驱动只是静默丢弃写操作
+- 做 UI 前先确认 `lcddev.width` / `lcddev.height` 实际值
+
+---
+
 ## 阶段四：OTA 联调
 
 ### Bug 4.1：MQTT 载荷长度计算错误 — 包含下一个包的数据
@@ -551,6 +696,9 @@ if (ota_get_state() == OTA_IDLE) {
 | 3.1 | LCD 抢占 | Bootloader 跳转后 App 不启动 | 外设冲突 | Bootloader 只触碰自己需要的外设 |
 | 3.2 | LOAD 溢出 | delay_us 死循环 | 单位混淆 | 延时函数参数必须明确标注单位 |
 | 3.3 | 中断未开 | delay_ms 死循环 | 裸机陷阱 | 裸机程序必须显式 `__enable_irq()` |
+| 3.4 | 回调签名不匹配 | 编译 warning，潜在 UB | 类型不匹配 | 函数指针类型必须严格匹配 ABI 签名 |
+| 3.5 | SysTick 三次重配 | 多处 delay_ms 死循环 | 时钟竞争 | 同一硬件被多层 init 重复配置是危险模式 |
+| 3.6 | LCD 坐标越界 | 版本号不显示 | 屏幕尺寸假设 | 硬编码屏幕尺寸 + 坐标越界无报错 = 静默失败 |
 | 4.1 | MQTT 载荷错算 | OTA 数据膨胀→溢出 | TCP 流式 | `total_len` vs `len`：TCP 缓冲 ≠ 包边界 |
 | 4.2 | JSON 空格 | ota_start 解析 size=0 | 格式假设 | 不能假设 JSON 无空格；生产代码用 JSON 库 |
 | 4.3 | getsockopt 返回 0 | 主循环收不到数据 | WIZnet 约束 | `getsockopt→recv` 是芯片 API 契约 |
@@ -559,4 +707,4 @@ if (ota_get_state() == OTA_IDLE) {
 | 4.6 | TCP 分包 | MQTT 解析失败丢包 | 流式重组 | TCP 应用必须循环解析 + 保留不完整帧 |
 | 4.7 | LCD 重叠 | 温度和进度条互相覆盖 | 资源共享 | 共享硬件必须互斥或主动避让 |
 
-**跨阶段的共同主题**：**环境假设差异**。FreeRTOS 与裸机之间、不同库之间、TCP 流式与 MQTT 帧之间、WIZnet 硬件与标准 socket API 之间——每一个抽象层边界都隐藏着环境前提。当这些前提不成立时，bug 往往表现隐蔽、定位困难。主动识别并显式记录环境依赖，是减少这类 bug 的最有效手段。
+**跨阶段的共同主题**：**环境假设差异**。FreeRTOS 与裸机之间、不同库之间、TCP 流式与 MQTT 帧之间、WIZnet 硬件与标准 socket API 之间、800×480 与 320×240 屏幕之间——每一个抽象层边界都隐藏着环境前提。当这些前提不成立时，bug 往往表现隐蔽、定位困难。主动识别并显式记录环境依赖，是减少这类 bug 的最有效手段。

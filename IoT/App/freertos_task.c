@@ -10,6 +10,7 @@
 #include "onenet.h"
 #include "w5500_port.h"
 #include "ota_download.h"
+#include "beep.h"
 /*FreeRTOS*********************************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
@@ -157,6 +158,7 @@ void sensor_task(void *pvParameters)
     lcd_init(); /* LCD 屏初始化 (FSMC) */
     lcd_clear(WHITE);
     lcd_show_string(10, 10, 240, 24, 24, "Sensor Init...", BLUE);
+//    beep_init(); /* BEEP (PB8) */
 
     printf("[SENSOR] DHT11 init...\r\n");
     if (dht11_init() == 0)
@@ -185,18 +187,18 @@ void sensor_task(void *pvParameters)
             /* OTA 进行中时跳过 LCD, 避免与 OTA 进度条重叠 */
             if (ota_get_state() == OTA_IDLE)
             {
-                snprintf(buf, sizeof(buf), "Temp: %d C    ", temp);
-                lcd_show_string(10, 30, 240, 24, 24, buf, RED);
-                snprintf(buf, sizeof(buf), "Humi: %d %%    ", humi);
-                lcd_show_string(10, 70, 240, 24, 24, buf, BLUE);
+                snprintf(buf, sizeof(buf), "Temp: %d C", temp);
+                lcd_show_string(80, 80, 160, 32, 24, buf, RED);
+                snprintf(buf, sizeof(buf), "Humi: %d %%", humi);
+                lcd_show_string(80, 130, 160, 32, 24, buf, BLUE);
             }
         }
         else
         {
             if (ota_get_state() == OTA_IDLE)
             {
-                lcd_show_string(10, 30, 240, 24, 24, "Temp: -- C    ", RED);
-                lcd_show_string(10, 70, 240, 24, 24, "Humi: -- %    ", BLUE);
+                lcd_show_string(80, 80, 160, 32, 24, "Temp: -- C", RED);
+                lcd_show_string(80, 130, 160, 32, 24, "Humi: -- %", BLUE);
             }
         }
 
@@ -293,10 +295,18 @@ void w5500_monitor_task(void *pvParameters)
         /* 网线拔出 (1→0 跳变) */
         if (!curr_link && last_link)
         {
-            /* 消费信号量, 下次 MQTT 尝试连接时阻塞 */
-            xSemaphoreTake(g_net_ready_sem, 0);   /* 非阻塞 take */
-            g_net_state = NET_STATE_DISCONNECTED; /* 通知 LED */
-            printf("[MONITOR] Link DOWN -> net lost\r\n");
+            xSemaphoreTake(g_net_ready_sem, 0);
+            g_net_state = NET_STATE_DISCONNECTED;
+//            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);    /* BEEP ON */
+//            printf("[MONITOR] Link DOWN -> BEEP ON\r\n");
+        }
+
+        /* 网线插入 (0→1 跳变) */
+        if (curr_link && !last_link)
+        {
+            g_net_state = NET_STATE_CONNECTING;
+//            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);  /* BEEP OFF */
+//            printf("[MONITOR] Link UP -> BEEP OFF\r\n");
         }
 
         last_link = curr_link;
@@ -357,7 +367,7 @@ void mqtt_task(void *pvParameters)
 /* ================================================================================
  * MQTT Broker: 1=test.mosquitto.org(测试), 0=OneNET(正式)
  * ================================================================================ */
-#define MQTT_TEST_MODE 0
+#define MQTT_TEST_MODE 1
 
 #if MQTT_TEST_MODE
     {

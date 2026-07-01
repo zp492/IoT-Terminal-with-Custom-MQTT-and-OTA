@@ -87,12 +87,13 @@ static void _cb_suback(uint16_t pkt_id, uint8_t ret_code) {
 }
 
 /* PUBLISH 回调 → 丢 topic, 只传 payload 给上层 */
-static void _cb_publish(const char *topic, const uint8_t *payload, uint16_t len)
+static void _cb_publish(const char *topic, uint16_t topic_len,
+                        const uint8_t *payload, uint16_t payload_len)
 {
     printf("[MQTT] PUBLISH topic=%.*s len=%u\r\n",
-           (topic ? (int)strlen(topic) : 0), (topic ? topic : "?"), len);
+           topic_len, (topic ? topic : "?"), payload_len);
     if (g_on_cmd) {
-        g_on_cmd(payload, len);
+        g_on_cmd(payload, payload_len);
     }
 }
 

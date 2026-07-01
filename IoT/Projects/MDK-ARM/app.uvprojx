@@ -520,6 +520,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\BSP\Src\w5500_port.c</FilePath>
             </File>
+            <File>
+              <FileName>beep.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\BSP\Src\beep.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

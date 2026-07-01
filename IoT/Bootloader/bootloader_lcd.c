@@ -13,27 +13,27 @@
 #include "key.h"
 #include <stdio.h>
 
-/* ---- 屏幕布局 (800x480) ---- */
-#define LCD_W           800
-#define LCD_H           480
-#define TITLE_Y         40
-#define INFO_Y          120
-#define PROGRESS_Y      280
-#define PROGRESS_H      36
-#define PROGRESS_X      80
-#define PROGRESS_W      (LCD_W - 160)
-#define HINT_Y          400
-#define CENTER_X(x,w)   ((LCD_W - (w)) / 2 + (x))  /* 居中辅助 */
+/* ---- 屏幕布局 (2.8寸 320x240) ---- */
+#define LCD_W 320
+#define LCD_H 240
+#define TITLE_Y 10
+#define INFO_Y 55
+#define PROGRESS_Y 130
+#define PROGRESS_H 20
+#define PROGRESS_X 20
+#define PROGRESS_W (LCD_W - 40)
+#define HINT_Y 200
+#define CENTER_X(x, w) ((LCD_W - (w)) / 2 + (x)) /* 居中辅助 */
 
 /* ---- 颜色方案 ---- */
-#define C_BG            WHITE
-#define C_TITLE         BLUE
-#define C_INFO          BLACK
-#define C_PROGRESS_BG   GRAY
-#define C_PROGRESS_BAR  GREEN
-#define C_ERROR         RED
-#define C_WARN          YELLOW
-#define C_HINT          GRAY
+#define C_BG WHITE
+#define C_TITLE BLUE
+#define C_INFO BLACK
+#define C_PROGRESS_BG MAGENTA
+#define C_PROGRESS_BAR GREEN
+#define C_ERROR RED
+#define C_WARN GREEN
+#define C_HINT MAGENTA
 
 /* ---- 全局 tick (与 bootloader.c 共享) ---- */
 extern volatile uint32_t g_bl_tick;
@@ -45,15 +45,18 @@ extern volatile uint32_t g_bl_tick;
 static void bl_lcd_draw_title(const char *title, uint16_t color)
 {
     lcd_clear(C_BG);
-    lcd_show_string(0, TITLE_Y, LCD_W, 32, 24, (char *)title, color);
+    lcd_show_string(0, TITLE_Y, LCD_W, 24, 16, (char *)title, color);
 }
 
 static uint8_t bl_lcd_poll_keys(void)
 {
-    uint8_t k = key_scan(1);  /* mode=1: 连续扫描 */
-    if (k == KEY0_PRES) return BL_KEY_CONFIRM;
-    if (k == KEY1_PRES) return BL_KEY_CANCEL;
-    if (k == WKUP_PRES) return BL_KEY_ANY;
+    uint8_t k = key_scan(1); /* mode=1: 连续扫描 */
+    if (k == KEY0_PRES)
+        return BL_KEY_CONFIRM;
+    if (k == KEY1_PRES)
+        return BL_KEY_CANCEL;
+    if (k == WKUP_PRES)
+        return BL_KEY_ANY;
     return BL_KEY_NONE;
 }
 
@@ -73,28 +76,31 @@ void bl_lcd_init(void)
 
 void bl_lcd_show_new_firmware(const char *cur_ver, const char *new_ver)
 {
-    char buf[64];
+    const char *cur_disp, *new_disp;
+
+    /* 版本号为空或 "?" 时显示 "Unknown" */
+    cur_disp = (cur_ver && cur_ver[0] && cur_ver[0] != '?') ? cur_ver : "Unknown";
+    new_disp = (new_ver && new_ver[0] && new_ver[0] != '?') ? new_ver : "Unknown";
+
+    /* 串口诊断 */
+    printf("[BL] LCD show: cur=%s new=%s\r\n", cur_disp, new_disp);
 
     bl_lcd_draw_title("OTA Firmware Upgrade", BLUE);
 
     /* 当前版本 */
-    lcd_show_string(60, INFO_Y, LCD_W - 120, 28, 24, (char *)"Current:", BLACK);
-    snprintf(buf, sizeof(buf), "v%s", cur_ver);
-    lcd_show_string(260, INFO_Y, 200, 28, 24, buf, GRAY);
+    lcd_show_string(10, INFO_Y, 80, 24, 16, (char *)"Cur:", BLACK);
+    lcd_show_string(90, INFO_Y, 220, 24, 16, (char *)cur_disp, BLUE);
 
     /* 新版本 */
-    lcd_show_string(60, INFO_Y + 50, LCD_W - 120, 28, 24, (char *)"New:", BLACK);
-    snprintf(buf, sizeof(buf), "v%s", new_ver);
-    lcd_show_string(260, INFO_Y + 50, 200, 28, 24, buf, GREEN);
+    lcd_show_string(10, INFO_Y + 30, 80, 24, 16, (char *)"New:", BLACK);
+    lcd_show_string(90, INFO_Y + 30, 220, 24, 16, (char *)new_disp, BLUE);
 
     /* 分隔线 */
-    lcd_draw_hline(60, INFO_Y + 110, LCD_W - 120, GRAY);
+    lcd_draw_hline(10, INFO_Y + 65, LCD_W - 20, CYAN);
 
     /* 操作提示 */
-    lcd_show_string(0, HINT_Y - 20, LCD_W, 24, 16,
-                    (char *)"KEY0 = Confirm Upgrade", BLUE);
-    lcd_show_string(0, HINT_Y + 20, LCD_W, 24, 16,
-                    (char *)"KEY1 = Skip (boot old firmware)", GRAY);
+    lcd_show_string(0, HINT_Y - 10, LCD_W, 20, 12,
+                    (char *)"KEY0=Upgrade  KEY1=Skip", BLACK);
 }
 
 /* ---- 确认/取消 (阻塞等待) ---- */
@@ -106,37 +112,43 @@ bl_confirm_t bl_lcd_confirm_upgrade(uint32_t timeout_ms)
     char buf[32];
     uint8_t key;
 
-    while (1) {
+    while (1)
+    {
         elapsed = g_bl_tick - start;
 
         /* 超时 → 自动升级 */
-        if (elapsed >= timeout_ms) {
+        if (elapsed >= timeout_ms)
+        {
             return BL_CONFIRM_TIMEOUT;
         }
 
         /* 倒计时显示 */
         {
             uint32_t remain = (timeout_ms - elapsed) / 1000;
-            if (remain < 60) {
-                snprintf(buf, sizeof(buf), "Auto-upgrade in %lu s...", (unsigned long)remain);
-                lcd_fill(0, HINT_Y - 50, LCD_W, HINT_Y - 30, C_BG);
-                lcd_show_string(0, HINT_Y - 50, LCD_W, 24, 16, buf, C_HINT);
+            if (remain < 60)
+            {
+                snprintf(buf, sizeof(buf), "Auto in %lu s...", (unsigned long)remain);
+                lcd_fill(0, PROGRESS_Y - 20, LCD_W, PROGRESS_Y, C_BG);
+                lcd_show_string(0, PROGRESS_Y - 20, LCD_W, 20, 12, buf, C_HINT);
             }
         }
 
         /* 按键检测 */
         key = bl_lcd_poll_keys();
-        if (key == BL_KEY_CONFIRM) {
+        if (key == BL_KEY_CONFIRM)
+        {
             return BL_CONFIRM_UPGRADE;
         }
-        if (key == BL_KEY_CANCEL) {
+        if (key == BL_KEY_CANCEL)
+        {
             return BL_CONFIRM_SKIP;
         }
 
         /* 每 50ms 检查一次 (g_bl_tick 由 SysTick 1ms 中断递增) */
         {
             uint32_t target = g_bl_tick + 50;
-            while (g_bl_tick < target) {
+            while (g_bl_tick < target)
+            {
                 /* 忙等待, SysTick 中断驱动 */
             }
         }
@@ -149,10 +161,10 @@ void bl_lcd_show_upgrading_start(void)
 {
     bl_lcd_draw_title("Upgrading Firmware...", BLUE);
 
-    lcd_show_string(0, INFO_Y, LCD_W, 28, 24,
+    lcd_show_string(0, INFO_Y, LCD_W, 24, 16,
                     (char *)"DO NOT POWER OFF!", RED);
-    lcd_show_string(0, INFO_Y + 40, LCD_W, 24, 16,
-                    (char *)"Erasing & flashing App area...", BLACK);
+    lcd_show_string(0, INFO_Y + 25, LCD_W, 20, 12,
+                    (char *)"Erasing & flashing...", BLACK);
 
     /* 进度条边框 */
     lcd_draw_rectangle(PROGRESS_X - 2, PROGRESS_Y - 2,
@@ -166,10 +178,12 @@ void bl_lcd_update_progress(uint32_t page, uint32_t total)
     uint32_t bar_w;
     char buf[32];
 
-    if (total == 0) return;
+    if (total == 0)
+        return;
 
     pct = (page * 100) / total;
-    if (pct > 100) pct = 100;
+    if (pct > 100)
+        pct = 100;
 
     bar_w = (PROGRESS_W * pct) / 100;
 
@@ -179,19 +193,20 @@ void bl_lcd_update_progress(uint32_t page, uint32_t total)
              (pct == 100) ? GREEN : BLUE);
 
     /* 未完成部分保持背景色 */
-    if (bar_w < PROGRESS_W) {
+    if (bar_w < PROGRESS_W)
+    {
         lcd_fill(PROGRESS_X + (uint16_t)bar_w, PROGRESS_Y,
                  PROGRESS_X + PROGRESS_W, PROGRESS_Y + PROGRESS_H,
                  C_BG);
     }
 
     /* 百分比文字 */
-    snprintf(buf, sizeof(buf), "%lu%%  (%lu/%lu)", (unsigned long)pct,
+    snprintf(buf, sizeof(buf), "%lu%% (%lu/%lu)", (unsigned long)pct,
              (unsigned long)page, (unsigned long)total);
-    lcd_fill(PROGRESS_X, PROGRESS_Y + PROGRESS_H + 10,
-             PROGRESS_X + PROGRESS_W, PROGRESS_Y + PROGRESS_H + 28, C_BG);
-    lcd_show_string(PROGRESS_X, PROGRESS_Y + PROGRESS_H + 10,
-                    PROGRESS_W, 24, 16, buf, BLACK);
+    lcd_fill(PROGRESS_X, PROGRESS_Y + PROGRESS_H + 2,
+             PROGRESS_X + PROGRESS_W, PROGRESS_Y + PROGRESS_H + 20, C_BG);
+    lcd_show_string(PROGRESS_X, PROGRESS_Y + PROGRESS_H + 2,
+                    PROGRESS_W, 20, 12, buf, BLACK);
 }
 
 /* ---- 结果 ---- */
@@ -200,13 +215,12 @@ void bl_lcd_show_upgrade_done(void)
 {
     bl_lcd_draw_title("Upgrade Complete!", GREEN);
 
-    lcd_show_string(0, INFO_Y, LCD_W, 28, 24,
-                    (char *)"Firmware installed successfully.", BLACK);
-    lcd_show_string(0, INFO_Y + 50, LCD_W, 24, 16,
-                    (char *)"Rebooting to new firmware...", GRAY);
-
-    lcd_show_string(0, HINT_Y, LCD_W, 24, 16,
-                    (char *)"Please wait, device will restart.", C_HINT);
+    lcd_show_string(0, INFO_Y, LCD_W, 24, 16,
+                    (char *)"Installed successfully.", BLACK);
+    lcd_show_string(0, INFO_Y + 30, LCD_W, 20, 12,
+                    (char *)"Rebooting...", GRAY);
+    lcd_show_string(0, HINT_Y, LCD_W, 20, 12,
+                    (char *)"Wait, device will restart.", C_HINT);
 }
 
 void bl_lcd_show_upgrade_error(int err_code)
@@ -215,28 +229,26 @@ void bl_lcd_show_upgrade_error(int err_code)
 
     bl_lcd_draw_title("Upgrade Failed!", RED);
 
-    lcd_show_string(0, INFO_Y, LCD_W, 28, 24,
-                    (char *)"An error occurred during upgrade.", BLACK);
+    lcd_show_string(0, INFO_Y, LCD_W, 24, 16,
+                    (char *)"Error during upgrade.", BLACK);
 
-    snprintf(buf, sizeof(buf), "Error code: 0x%02X", err_code);
-    lcd_show_string(0, INFO_Y + 50, LCD_W, 28, 24, buf, RED);
+    snprintf(buf, sizeof(buf), "Code: 0x%02X", err_code);
+    lcd_show_string(0, INFO_Y + 30, LCD_W, 24, 16, buf, RED);
 
-    lcd_show_string(0, INFO_Y + 110, LCD_W, 24, 16,
-                    (char *)"The old firmware may be corrupted.", C_HINT);
-    lcd_show_string(0, INFO_Y + 140, LCD_W, 24, 16,
-                    (char *)"Bootloader will retry on next power-on.", C_HINT);
+    lcd_show_string(0, INFO_Y + 65, LCD_W, 20, 12,
+                    (char *)"Old firmware may be corrupted.", C_HINT);
 
-    lcd_show_string(0, HINT_Y, LCD_W, 24, 16,
-                    (char *)"Press WKUP to reboot and retry...", BLACK);
+    lcd_show_string(0, HINT_Y, LCD_W, 20, 12,
+                    (char *)"Press WKUP to retry...", BLACK);
 }
 
 void bl_lcd_show_upgrade_cancelled(void)
 {
     bl_lcd_draw_title("Upgrade Cancelled", GRAY);
 
-    lcd_show_string(0, INFO_Y, LCD_W, 28, 24,
-                    (char *)"User cancelled the upgrade.", BLACK);
-    lcd_show_string(0, INFO_Y + 50, LCD_W, 24, 16,
+    lcd_show_string(0, INFO_Y, LCD_W, 24, 16,
+                    (char *)"User cancelled.", BLACK);
+    lcd_show_string(0, INFO_Y + 30, LCD_W, 20, 12,
                     (char *)"Booting current firmware...", GRAY);
 }
 
@@ -246,15 +258,19 @@ void bl_lcd_show_upgrade_cancelled(void)
 
 void bl_lcd_wait_any_key(void)
 {
-    while (1) {
+    while (1)
+    {
         uint8_t k = bl_lcd_poll_keys();
-        if (k != BL_KEY_NONE) {
+        if (k != BL_KEY_NONE)
+        {
             break;
         }
         /* 50ms 轮询 */
         {
             uint32_t target = g_bl_tick + 50;
-            while (g_bl_tick < target) {}
+            while (g_bl_tick < target)
+            {
+            }
         }
     }
 }

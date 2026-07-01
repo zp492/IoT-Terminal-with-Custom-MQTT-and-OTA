@@ -480,7 +480,7 @@ int32_t mqtt_parse(const uint8_t *data, uint16_t len,
         payload = (payload_len > 0) ? (data + pos) : NULL;
 
         if (on_publish) {
-            on_publish(topic, payload, payload_len);
+            on_publish(topic, topic_len, payload, payload_len);
         }
         break;
     }

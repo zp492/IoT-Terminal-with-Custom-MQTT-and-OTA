@@ -88,8 +88,8 @@ typedef struct {
  * - on_suback  : 订阅确认 (pkt_id + 返回码)
  * ================================================================================ */
 typedef void (*mqtt_on_connack_t)(uint8_t ret_code);
-typedef void (*mqtt_on_publish_t)(const char *topic,
-                                  const uint8_t *payload, uint16_t len);
+typedef void (*mqtt_on_publish_t)(const char *topic, uint16_t topic_len,
+                                  const uint8_t *payload, uint16_t payload_len);
 typedef void (*mqtt_on_suback_t)(uint16_t pkt_id, uint8_t ret_code);
 
 /* ================================================================================
