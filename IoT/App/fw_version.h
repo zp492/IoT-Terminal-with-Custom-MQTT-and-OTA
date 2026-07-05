@@ -15,6 +15,6 @@
  * ================================================================================ */
 #define FW_VER_MAJOR  1
 #define FW_VER_MINOR  2
-#define FW_VER_PATCH  1
+#define FW_VER_PATCH  2
 
 #endif /* __FW_VERSION_H */

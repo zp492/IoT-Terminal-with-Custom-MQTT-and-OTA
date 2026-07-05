@@ -86,11 +86,15 @@ typedef struct {
  * - on_connack : CONNACK 返回码
  * - on_publish : 收到服务器下发的消息 (topic + payload)
  * - on_suback  : 订阅确认 (pkt_id + 返回码)
+ * - on_pingresp: 收到心跳响应, 表示连接正常
+ * - on_puback   : QoS 1 发布确认 (pkt_id), 预留接口
  * ================================================================================ */
 typedef void (*mqtt_on_connack_t)(uint8_t ret_code);
 typedef void (*mqtt_on_publish_t)(const char *topic, uint16_t topic_len,
                                   const uint8_t *payload, uint16_t payload_len);
 typedef void (*mqtt_on_suback_t)(uint16_t pkt_id, uint8_t ret_code);
+typedef void (*mqtt_on_pingresp_t)(void);
+typedef void (*mqtt_on_puback_t)(uint16_t pkt_id);
 
 /* ================================================================================
  * 剩余长度编解码 (MQTT 3.1.1 §2.2.3)
@@ -176,18 +180,22 @@ uint16_t mqtt_build_disconnect(uint8_t *buf);
  *              调用方需保证 data 包含完整报文 (TCP 保证字节流顺序)
  * @param       data:   收到的原始数据
  * @param       len:    数据长度
- * @param       on_connack:  CONNACK 回调 (NULL 忽略)
- * @param       on_publish:  PUBLISH 回调 (NULL 忽略)
- * @param       on_suback:   SUBACK 回调  (NULL 忽略)
+ * @param       on_connack:   CONNACK 回调  (NULL 忽略)
+ * @param       on_publish:   PUBLISH 回调  (NULL 忽略)
+ * @param       on_suback:    SUBACK 回调   (NULL 忽略)
+ * @param       on_pingresp:  PINGRESP 回调 (NULL 忽略)
+ * @param       on_puback:    PUBACK 回调   (NULL 忽略, QoS 1 预留)
  * @retval      >0: 成功解析, 返回消耗的字节数
  *              -1: 数据不完整 (需要更多数据)
  *              -2: 协议错误
  *              -3: 未知报文类型
  */
 int32_t mqtt_parse(const uint8_t *data, uint16_t len,
-                   mqtt_on_connack_t  on_connack,
-                   mqtt_on_publish_t  on_publish,
-                   mqtt_on_suback_t   on_suback);
+                   mqtt_on_connack_t   on_connack,
+                   mqtt_on_publish_t   on_publish,
+                   mqtt_on_suback_t    on_suback,
+                   mqtt_on_pingresp_t  on_pingresp,
+                   mqtt_on_puback_t    on_puback);
 
 #ifdef __cplusplus
 }

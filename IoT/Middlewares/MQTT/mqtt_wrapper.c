@@ -65,6 +65,15 @@ static uint16_t g_rx_pending = 0;  /* 上次未解析完的字节数 */
 static TickType_t g_last_ping;
 static TickType_t g_last_pub;
 
+/* PINGRESP 超时检测 */
+static uint8_t  g_ping_miss_count = 0;  /* 连续未收到 PINGRESP 的次数 */
+static uint8_t  g_ping_waiting    = 0;  /* 已发送 PINGREQ, 等待 PINGRESP */
+
+/* 重连退避 (指数增长: 5s → 10s → 20s → 40s → 60s 封顶) */
+#define MQTT_BACKOFF_INIT_MS   5000
+#define MQTT_BACKOFF_MAX_MS    60000
+static uint32_t g_backoff_ms = MQTT_BACKOFF_INIT_MS;
+
 /* 报文标识符 (+1 每次, 回绕到 1) */
 static uint16_t g_pkt_id = 0;
 
@@ -84,6 +93,12 @@ static void _cb_connack(uint8_t ret_code) { g_connack_rc = ret_code; }
 static void _cb_suback(uint16_t pkt_id, uint8_t ret_code) {
     (void)pkt_id;
     g_suback_rc = ret_code;
+}
+
+/* PINGRESP 回调 → 收到心跳响应, 清零丢失计数 */
+static void _cb_pingresp(void) {
+    g_ping_waiting    = 0;
+    g_ping_miss_count = 0;
 }
 
 /* PUBLISH 回调 → 丢 topic, 只传 payload 给上层 */
@@ -158,7 +173,7 @@ static int8_t mqtt_full_connect(const mqtt_broker_cfg_t *cfg)
             if (rx_ret > 0) {
                 printf("[MQTT] recv %ld bytes, parse...\r\n", rx_ret);
                 int32_t p = mqtt_parse(g_rx_buf, (uint16_t)rx_ret,
-                           _cb_connack, NULL, NULL);
+                           _cb_connack, NULL, NULL, NULL, NULL);
                 printf("[MQTT] parse ret=%ld connack=%d\r\n", p, g_connack_rc);
                 if (g_connack_rc != 0xFF) break;   /* 已收到 */
             } else if (rx_ret < 0) {
@@ -196,7 +211,7 @@ static int8_t mqtt_full_connect(const mqtt_broker_cfg_t *cfg)
                                         MQTT_RECV_BUF_SIZE, 500);
                 if (rx_ret > 0) {
                     mqtt_parse(g_rx_buf, (uint16_t)rx_ret,
-                               NULL, NULL, _cb_suback);
+                               NULL, NULL, _cb_suback, NULL, NULL);
                     if (g_suback_rc != 0xFF) break;
                 } else if (rx_ret < 0) {
                     goto conn_fail;
@@ -219,6 +234,9 @@ static int8_t mqtt_full_connect(const mqtt_broker_cfg_t *cfg)
     g_net_state = NET_STATE_CONNECTED;
     g_last_ping = xTaskGetTickCount();
     g_last_pub  = xTaskGetTickCount();
+    g_backoff_ms      = MQTT_BACKOFF_INIT_MS;   /* 重连成功, 重置退避 */
+    g_ping_miss_count = 0;
+    g_ping_waiting    = 0;
     return 0;
 
 conn_fail:
@@ -270,14 +288,27 @@ void mqtt_task_run(const mqtt_broker_cfg_t *cfg, mqtt_on_cmd_t on_cmd,
          * ================================================================ */
         while (g_state == STATE_CONNECTED)
         {
-            /* ---- PINGREQ 保活 (keep_alive / 1.5 间隔) ---- */
+            /* ---- PINGREQ 保活 + PINGRESP 超时检测 ---- */
             if ((xTaskGetTickCount() - g_last_ping) >=
                 pdMS_TO_TICKS(MQTT_PING_INTERVAL_MS))
             {
+                /* 检查上一次 PINGRESP 是否收到 */
+                if (g_ping_waiting) {
+                    g_ping_miss_count++;
+                    printf("[MQTT] PINGRESP miss %d/3\r\n", g_ping_miss_count);
+                    if (g_ping_miss_count >= 3) {
+                        printf("[MQTT] PINGRESP timeout, closing...\r\n");
+                        len = mqtt_build_disconnect(g_tx_buf);
+                        transport_send(MQTT_SOCKET, g_tx_buf, len);
+                        break;                          /* 连续 3 次丢失 → 重连 */
+                    }
+                }
+
                 len = mqtt_build_pingreq(g_tx_buf);
                 if (transport_send(MQTT_SOCKET, g_tx_buf, len) < 0) {
                     break;                              /* 发送失败 → 重连 */
                 }
+                g_ping_waiting = 1;
                 g_last_ping = xTaskGetTickCount();
             }
 
@@ -320,7 +351,9 @@ void mqtt_task_run(const mqtt_broker_cfg_t *cfg, mqtt_on_cmd_t on_cmd,
                 printf("[MQTT] +%ld (pend=%u total=%u)\r\n", rx_ret, g_rx_pending, total);
                 g_rx_pending = 0;
                 while (pos < total) {
-                    consumed = mqtt_parse(g_rx_buf + pos, total - pos, NULL, _cb_publish, NULL);
+                    consumed = mqtt_parse(g_rx_buf + pos, total - pos,
+                                         NULL, _cb_publish, NULL,
+                                         _cb_pingresp, NULL);
                     if (consumed > 0) { pos += consumed; }
                     else if (consumed == -1) {/* 数据不足 */
                         if (pos > 0) memmove(g_rx_buf, g_rx_buf + pos, total - pos);/* 移动到开头 */
@@ -338,6 +371,11 @@ void mqtt_task_run(const mqtt_broker_cfg_t *cfg, mqtt_on_cmd_t on_cmd,
         transport_disconnect(MQTT_SOCKET);
         g_state = STATE_DISCONNECTED;
         g_net_state = NET_STATE_DISCONNECTED;
-        vTaskDelay(pdMS_TO_TICKS(500));
+
+        /* 指数退避重连 */
+        printf("[MQTT] reconnect backoff %lu ms\r\n", g_backoff_ms);
+        vTaskDelay(pdMS_TO_TICKS(g_backoff_ms));
+        g_backoff_ms = (g_backoff_ms * 2 > MQTT_BACKOFF_MAX_MS)
+                       ? MQTT_BACKOFF_MAX_MS : g_backoff_ms * 2;
     }
 }

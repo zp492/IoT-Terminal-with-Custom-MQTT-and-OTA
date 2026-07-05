@@ -158,7 +158,7 @@ void sensor_task(void *pvParameters)
     lcd_init(); /* LCD 屏初始化 (FSMC) */
     lcd_clear(WHITE);
     lcd_show_string(10, 10, 240, 24, 24, "Sensor Init...", BLUE);
-//    beep_init(); /* BEEP (PB8) */
+    beep_init(); /* BEEP (PB8) */
 
     printf("[SENSOR] DHT11 init...\r\n");
     if (dht11_init() == 0)
@@ -202,7 +202,7 @@ void sensor_task(void *pvParameters)
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(1000));// 每秒刷新一次
     }
 }
 
@@ -297,16 +297,16 @@ void w5500_monitor_task(void *pvParameters)
         {
             xSemaphoreTake(g_net_ready_sem, 0);
             g_net_state = NET_STATE_DISCONNECTED;
-//            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);    /* BEEP ON */
-//            printf("[MONITOR] Link DOWN -> BEEP ON\r\n");
+            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);    /* BEEP ON */
+            printf("[MONITOR] Link DOWN -> BEEP ON\r\n");
         }
 
         /* 网线插入 (0→1 跳变) */
         if (curr_link && !last_link)
         {
             g_net_state = NET_STATE_CONNECTING;
-//            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);  /* BEEP OFF */
-//            printf("[MONITOR] Link UP -> BEEP OFF\r\n");
+            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);  /* BEEP OFF */
+            printf("[MONITOR] Link UP -> BEEP OFF\r\n");
         }
 
         last_link = curr_link;
@@ -367,7 +367,7 @@ void mqtt_task(void *pvParameters)
 /* ================================================================================
  * MQTT Broker: 1=test.mosquitto.org(测试), 0=OneNET(正式)
  * ================================================================================ */
-#define MQTT_TEST_MODE 1
+#define MQTT_TEST_MODE 0
 
 #if MQTT_TEST_MODE
     {

@@ -395,18 +395,22 @@ uint16_t mqtt_build_disconnect(uint8_t *buf)
  *              本函数只解析第一个, 返回消耗的字节数
  * @param       data:   收到的原始数据
  * @param       len:    数据长度
- * @param       on_connack:  CONNACK 回调
- * @param       on_publish:  PUBLISH 回调
- * @param       on_suback:   SUBACK 回调
+ * @param       on_connack:   CONNACK 回调
+ * @param       on_publish:   PUBLISH 回调
+ * @param       on_suback:    SUBACK 回调
+ * @param       on_pingresp:  PINGRESP 回调
+ * @param       on_puback:    PUBACK 回调 (QoS 1 预留)
  * @retval      >0: 成功解析, 返回消耗的字节数
  *              -1: 数据不完整 (需调用方再次 recv)
  *              -2: 协议错误
  *              -3: 未知报文类型
  */
 int32_t mqtt_parse(const uint8_t *data, uint16_t len,
-                   mqtt_on_connack_t  on_connack,
-                   mqtt_on_publish_t  on_publish,
-                   mqtt_on_suback_t   on_suback)
+                   mqtt_on_connack_t   on_connack,
+                   mqtt_on_publish_t   on_publish,
+                   mqtt_on_suback_t    on_suback,
+                   mqtt_on_pingresp_t  on_pingresp,
+                   mqtt_on_puback_t    on_puback)
 {
     uint8_t  pkt_type;
     uint8_t  pos = 0;
@@ -509,16 +513,29 @@ int32_t mqtt_parse(const uint8_t *data, uint16_t len,
      * 无可变头, 无载荷。收到即表示连接正常, 无需额外处理。
      * ============================================================ */
     case MQTT_PINGRESP:
-        /* 收到心跳响应, 连接正常 — 上层可在此记录时间戳 */
+        if (on_pingresp) {
+            on_pingresp();
+        }
         break;
 
     /* ============================================================
-     * PUBACK / PUBREC / PUBREL / PUBCOMP / UNSUBACK
+     * PUBACK  (MQTT 3.1.1 §3.4) — QoS 1 发布确认
      * ----------------------------------------------------------------------------
-     * 当前未实现 QoS 1/2 完整交互, 但合法报文不应报错,
-     * 只跳过 (上层后续可扩展)
+     * 可变头: 报文标识符(2)
      * ============================================================ */
     case MQTT_PUBACK:
+        if (remaining < 2) return -2;
+        {
+            uint16_t pkt_id = ((uint16_t)data[pos] << 8) | data[pos + 1];
+            if (on_puback) {
+                on_puback(pkt_id);
+            }
+        }
+        break;
+
+    /* ============================================================
+     * PUBREC / PUBREL / PUBCOMP / UNSUBACK  (QoS 2, 当前跳过)
+     * ============================================================ */
     case MQTT_PUBREC:
     case MQTT_PUBREL:
     case MQTT_PUBCOMP:
