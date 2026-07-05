@@ -7,6 +7,10 @@
 - 支持掉电保护的 OTA 远程升级（Flag 状态机 + 三层 CRC 校验 + 逐页原子搬运）
 - FreeRTOS 5 任务架构，消息队列 + 信号量异步通信，空闲 WFI 低功耗
 
+## 演示视频
+
+▶️ [B站观看](https://www.bilibili.com/video/BV1BKTE6iEED/)
+
 ## 硬件平台
 
 | 模块 | 型号 | 接口 |
