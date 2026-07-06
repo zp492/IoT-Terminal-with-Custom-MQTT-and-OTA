@@ -2,14 +2,14 @@
 
 > 基于 STM32F103ZET6 + W5500 + FreeRTOS + 自研 MQTT 的物联网终端，支持温湿度采集、云端指令控制和 OTA 固件远程升级。
 
+## 演示视频
+
+▶️ [B站观看](https://www.bilibili.com/video/BV1BKTE6iEED/)
+
 ## 核心亮点
 - 自研 MQTT 3.1.1 协议栈（~500 行 C，零第三方依赖）
 - 支持掉电保护的 OTA 远程升级（Flag 状态机 + 三层 CRC 校验 + 逐页原子搬运）
 - FreeRTOS 5 任务架构，消息队列 + 信号量异步通信，空闲 WFI 低功耗
-
-## 演示视频
-
-▶️ [B站观看](https://www.bilibili.com/video/BV1BKTE6iEED/)
 
 ## 硬件平台
 
@@ -69,7 +69,9 @@
 
 ### MQTT 通信
 - **自研 MQTT 3.1.1 协议栈**（~500 行 C，无第三方依赖）
-- 剩余长度编解码、CONNECT/PUBLISH(QoS0)/SUBSCRIBE/PINGREQ 报文组装与解析
+- 剩余长度编解码、CONNECT/PUBLISH(QoS0)/SUBSCRIBE/PINGREQ/DISCONNECT 报文组装与解析
+- PINGRESP 超时检测: 连续 3 次未收到心跳响应 → 主动 DISCONNECT → 指数退避重连
+- PUBACK 回调接口已预留, 可快速扩展 QoS 1
 - TCP 流式数据重组（`g_rx_pending` 残帧拼接 + 循环解析）
 - 支持 OneNET 云平台和公共 Broker（编译开关 `MQTT_TEST_MODE` 一键切换）
 - JSON 格式温湿度上报 + 平台指令下发控制 LED
@@ -228,9 +230,11 @@ python Tools/ota_push.py Output/f103_zj.hex
 | CRC32 一致性 | STM32 硬件 CRC = Python 软件 CRC (CRC-32/MPEG2)，多项式 0x04C11DB7 |
 | 掉电保护 | Flag 在三层校验全部通过后才擦除；Bootloader 逐页原子搬运 |
 | MQTT 不阻塞 | 独立 OTA 任务 + FreeRTOS 队列，Flash 操作在低优先级任务 |
+| PINGRESP 超时检测 | 连续 3 次未收到 PINGRESP → 主动发 DISCONNECT → 关 TCP → 指数退避重连 (5s/10s/20s/40s/60s) |
+| PUBACK 回调预留 | `mqtt_parse` 已预留 `on_puback` 回调, 后续加 QoS 1 只需上层注册回调即可 |
 | TCP 流式重组 | `g_rx_pending` 保留不完整帧，循环 `mqtt_parse` + `memmove` 拼接 |
 | MQTT 载荷对齐 | `payload_len = total_len - pos` 而非 `len - pos` |
-| JSON 格式兼容 | `strstr` 后跳过冒号空格再解析数字 |
+| JSON 格式兼容 | 移植 cJSON 库，`cJSON_ParseWithLength` + `cJSON_GetObjectItem` 精准解析，不再依赖 `strstr` |
 | 队列流控 | Python 脚本 `ota_start` 后延时 6s 等设备擦除完成 |
 | LCD 互斥 | `ota_get_state() != OTA_IDLE` 时 sensor 任务跳过写屏 |
 | 堆安全 | `configASSERT` 导致停机；堆 20KB → 25KB |
@@ -258,6 +262,7 @@ python Tools/ota_push.py Output/f103_zj.hex
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.0 | 2026-07-05 | PINGRESP 超时检测 (连续 3 次丢失 → 主动断线) + 指数退避重连 (5s→60s 封顶) + PUBACK 回调预留 (QoS 1 就绪) + DISCONNECT 优雅断开 |
 | v1.1.0 | 2026-06-28 | LCD 升级交互、版本管理、低功耗、项目文档完善、删除冗余文件 |
 | v1.0.0 | 2026-06-22 | OTA 完整实现 (Bootloader + 下载 + 搬运 + Python 工具 + 联调) |
 | — | 2026-06-19 | MQTT 自研协议栈 + OneNET 适配 + FreeRTOS 多任务架构 |
@@ -265,4 +270,3 @@ python Tools/ota_push.py Output/f103_zj.hex
 ## 许可
 
 Educational / Personal Project.
-
