@@ -136,9 +136,9 @@ MQTT over TCP 是字节流，W5500 一次 `recv` 可能返回多个 MQTT 包的�
 
 `mqtt_client.c` 中 `payload_len = len - pos` 使用总接收长度，当 buffer 含多个包时载荷被污染。改为 `payload_len = total_len - pos`，限制在当前 MQTT 包范围内。
 
-**6.3 JSON 解析器不处理空格**
+**6.3 JSON 解析器不处理空格** ✅ 已根治
 
-paho-mqtt 生成的 JSON 中冒号后有空格：`"size": 62492`。`strstr` + 固定偏移跳过 key 后指向空格而非数字，导致解析值恒为 0。修复为跳过 key 后主动越过空格再解析数字。
+paho-mqtt 生成的 JSON 中冒号后有空格：`"size": 62492`。`strstr` + 固定偏移跳过 key 后指向空格而非数字，导致解析值恒为 0。临时修复为跳过 key 后主动越过空格再解析数字。**最终方案：移植 cJSON 库**，用 `cJSON_ParseWithLength` + `cJSON_GetObjectItem` 彻底替换所有 `strstr` 解析，同时处理 LED 控制命令和 OTA 指令。
 
 **6.4 擦除期间队列溢出**
 
@@ -210,7 +210,7 @@ Flag 页 (0x0800B000): [magic][fw_size][fw_crc32][status]
 | MQTT 不阻塞 | 独立 OTA 任务 + FreeRTOS 队列 |
 | TCP 流式重组 | `g_rx_pending` 保留不完整帧, 循环解析 + 下次拼接 |
 | MQTT 载荷对齐 | `payload_len = total_len - pos` 而非 `len - pos` |
-| JSON 格式兼容 | `strstr` 后跳过冒号空格再解析数字 |
+| JSON 格式兼容 | 移植 cJSON 库，`cJSON_ParseWithLength` + `cJSON_GetObjectItem` 精准解析 |
 | 队列流控 | 脚本 `ota_start` 后延时 6s 等设备擦除完成 |
 | FreeRTOS 堆安全 | `configASSERT` 应停机; 堆从 20KB→25KB |
 | LCD 互斥 | `ota_get_state() != OTA_IDLE` 时 sensor task 跳写 |

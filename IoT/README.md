@@ -234,7 +234,7 @@ python Tools/ota_push.py Output/f103_zj.hex
 | PUBACK 回调预留 | `mqtt_parse` 已预留 `on_puback` 回调, 后续加 QoS 1 只需上层注册回调即可 |
 | TCP 流式重组 | `g_rx_pending` 保留不完整帧，循环 `mqtt_parse` + `memmove` 拼接 |
 | MQTT 载荷对齐 | `payload_len = total_len - pos` 而非 `len - pos` |
-| JSON 格式兼容 | `strstr` 后跳过冒号空格再解析数字 |
+| JSON 格式兼容 | 移植 cJSON 库，`cJSON_ParseWithLength` + `cJSON_GetObjectItem` 精准解析，不再依赖 `strstr` |
 | 队列流控 | Python 脚本 `ota_start` 后延时 6s 等设备擦除完成 |
 | LCD 互斥 | `ota_get_state() != OTA_IDLE` 时 sensor 任务跳过写屏 |
 | 堆安全 | `configASSERT` 导致停机；堆 20KB → 25KB |

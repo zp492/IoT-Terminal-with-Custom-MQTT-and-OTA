@@ -547,6 +547,15 @@ while (*s >= '0' && *s <= '9') { ... }
 
 解析 JSON 不能假设格式——标准 JSON 允许 key 和 value 之间有任意空白。简单的 `strstr` + 固定偏移在企业场景不够健壮，生产代码应使用正式 JSON 解析库。
 
+#### 最终方案 ✅
+
+已移植 cJSON 库（`Middlewares/cJSON/`），用 `cJSON_ParseWithLength()` + `cJSON_GetObjectItem()` 替换所有 `strstr` 解析：
+- `freertos_task.c` `mqtt_on_cmd()`: LED 控制命令（led0/led1/led_alt）
+- `ota_download.c` `ota_process_item()`: OTA 指令分派（ota_start/end/cancel）
+- `ota_download.c` `ota_process_start_json()`: 解析 size 和 crc32 字段
+
+cJSON 天然处理空白、类型检查、越界判断，无需手动跳过空格或拼接数字。
+
 ---
 
 ### Bug 4.3：W5500 `getsockopt(SO_RECVBUF)` 在特定条件下返回 0

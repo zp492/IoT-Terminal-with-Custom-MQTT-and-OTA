@@ -15,6 +15,7 @@
 #include "lcd.h"
 #include <string.h>
 #include <stdio.h>
+#include "cJSON/cjson_port.h"
 
 /* FreeRTOS */
 #include "task.h"
@@ -70,7 +71,7 @@ static CRC_HandleTypeDef g_crc_handle;
 
 /* ---- 内置函数 ---- */
 static void ota_process_item(const ota_queue_item_t *item);
-static void ota_process_start_json(const uint8_t *payload, uint16_t len);
+static void ota_process_start_json(cJSON *root);
 static void ota_process_data_chunk(const uint8_t *payload, uint16_t len);
 static void ota_process_end(void);
 static void ota_process_cancel(void);
@@ -183,19 +184,20 @@ static void ota_process_item(const ota_queue_item_t *item)
 
     /* ---- JSON 指令 ---- */
     if (len > 0 && p[0] == '{') {
-        /* 小缓冲区做 strstr */
-        char buf[64];
-        uint16_t n = (len < 63) ? len : 63;
-        memcpy(buf, p, n);
-        buf[n] = '\0';
+        cJSON *root = cJSON_ParseWithLength((const char *)p, len);
+        if (root == NULL) {
+            OTA_LOG("JSON parse error");
+            return;
+        }
 
-        if (strstr(buf, "\"ota_start\"")) {
-            ota_process_start_json(p, len);
-        } else if (strstr(buf, "\"ota_end\"")) {
+        if (cJSON_GetObjectItem(root, "ota_start")) {
+            ota_process_start_json(root);
+        } else if (cJSON_GetObjectItem(root, "ota_end")) {
             ota_process_end();
-        } else if (strstr(buf, "\"ota_cancel\"")) {
+        } else if (cJSON_GetObjectItem(root, "ota_cancel")) {
             ota_process_cancel();
         }
+        cJSON_Delete(root);
         return;
     }
 }
@@ -204,9 +206,9 @@ static void ota_process_item(const ota_queue_item_t *item)
  * ota_start 处理 — 解析 JSON + 擦 Download 区
  * ================================================================================ */
 
-static void ota_process_start_json(const uint8_t *payload, uint16_t len)
+static void ota_process_start_json(cJSON *root)
 {
-    const char *s;
+    cJSON *item;
     unsigned long parsed_size = 0;
     unsigned long parsed_crc  = 0;
 
@@ -215,26 +217,25 @@ static void ota_process_start_json(const uint8_t *payload, uint16_t len)
         return;
     }
 
-    /* 解析 "size":N (JSON 冒号后可能有空格: "size": 123) */
-    s = strstr((const char *)payload, "\"size\":");
-    if (s) {
-        s = s + 7;                       /* 跳过 \"size\": */
-        while (*s == ' ' || *s == '\t') s++;  /* 跳过空格 */
-        while (*s >= '0' && *s <= '9') { parsed_size = parsed_size * 10 + (*s - '0'); s++; }
-    }
-
-    /* 解析 "crc32":N */
-    s = strstr((const char *)payload, "\"crc32\":");
-    if (s) {
-        s = s + 8;
-        while (*s == ' ' || *s == '\t') s++;
-        while (*s >= '0' && *s <= '9') { parsed_crc = parsed_crc * 10 + (*s - '0'); s++; }
-    }
-
-    if (parsed_size == 0 || parsed_size > DOWNLOAD_SIZE) {
-        OTA_LOG("start: invalid size %lu", parsed_size);
+    /* 解析 "size":N */
+    item = cJSON_GetObjectItem(root, "size");
+    if (!cJSON_IsNumber(item) || item->valuedouble <= 0) {
+        OTA_LOG("start: invalid or missing size");
         ota_set_error(OTA_ERR_INVALID_CMD);
         return;
+    }
+    parsed_size = (unsigned long)item->valuedouble;
+
+    if (parsed_size > DOWNLOAD_SIZE) {
+        OTA_LOG("start: size %lu exceeds DOWNLOAD_SIZE %lu", parsed_size, (unsigned long)DOWNLOAD_SIZE);
+        ota_set_error(OTA_ERR_INVALID_CMD);
+        return;
+    }
+
+    /* 解析 "crc32":N (可选, 不存在时默认为 0) */
+    item = cJSON_GetObjectItem(root, "crc32");
+    if (cJSON_IsNumber(item)) {
+        parsed_crc = (unsigned long)item->valuedouble;
     }
 
     g_fw_total_size   = (uint32_t)parsed_size;

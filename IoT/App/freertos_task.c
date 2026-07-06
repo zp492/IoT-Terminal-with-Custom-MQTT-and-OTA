@@ -11,6 +11,7 @@
 #include "w5500_port.h"
 #include "ota_download.h"
 #include "beep.h"
+#include "cJSON/cjson_port.h"
 /*FreeRTOS*********************************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
@@ -321,6 +322,9 @@ void w5500_monitor_task(void *pvParameters)
  */
 static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
 {
+    cJSON *root;
+    cJSON *item;
+
     /* ---- OTA 二进制帧检测 (magic = "OTAD") ---- */
     if (len >= 4 && payload[0] == 'O' && payload[1] == 'T' &&
         payload[2] == 'A' && payload[3] == 'D')
@@ -329,31 +333,45 @@ static void mqtt_on_cmd(const uint8_t *payload, uint16_t len)
         return; /* OTA 数据直接入队, 不走到 LED */
     }
 
-    /* ---- JSON 消息: 先尝试入队 OTA, 不匹配再走 LED ---- */
+    /* ---- JSON 消息 ---- */
     if (len > 0 && payload[0] == '{')
     {
+        /* OTA 命令: 入队给 OTA 任务 (内部按 key 分派) */
         ota_handle_packet(payload, len, g_ota_queue);
-        /* ota_handle_packet 内部检测 "ota_start/end/cancel" → 入队 → 立即返回
-           非 OTA 命令 → 忽略, 不影响后续 LED 处理 */
+
+        printf("[MQTT] CMD: %.*s\r\n", len, payload);
+
+        /* cJSON 解析 LED 控制命令 */
+        root = cJSON_ParseWithLength((const char *)payload, len);
+        if (root == NULL)
+        {
+            printf("[MQTT] JSON parse error: %s\r\n", cJSON_GetErrorPtr());
+            return;
+        }
+
+        /* LED0: {"led0":1} → 亮(LED0(0)), {"led0":0} → 灭(LED0(1)) */
+        item = cJSON_GetObjectItem(root, "led0");
+        if (cJSON_IsNumber(item))
+        {
+            LED0(!item->valueint);
+        }
+
+        /* LED1: {"led1":1} → 亮(LED1(0)), {"led1":0} → 灭(LED1(1)) */
+        item = cJSON_GetObjectItem(root, "led1");
+        if (cJSON_IsNumber(item))
+        {
+            LED1(!item->valueint);
+        }
+
+        /* LED 交替闪烁: {"led_alt":1} 开 / {"led_alt":0} 关 */
+        item = cJSON_GetObjectItem(root, "led_alt");
+        if (cJSON_IsNumber(item))
+        {
+            g_led_alt_mode = (item->valueint != 0) ? 1 : 0;
+        }
+
+        cJSON_Delete(root);
     }
-
-    printf("[MQTT] CMD: %.*s\r\n", len, payload);
-
-    /* LED 控制: {"led0":1} → LED0亮, {"led1":0} → LED1灭 */
-    if (strstr((char *)payload, "\"led0\":0"))
-        LED0(1);
-    if (strstr((char *)payload, "\"led0\":1"))
-        LED0(0);
-    if (strstr((char *)payload, "\"led1\":0"))
-        LED1(1);
-    if (strstr((char *)payload, "\"led1\":1"))
-        LED1(0);
-
-    /* LED 交替闪烁: {"led_alt":1} 开 / {"led_alt":0} 关 */
-    if (strstr((char *)payload, "\"led_alt\":1"))
-        g_led_alt_mode = 1;
-    if (strstr((char *)payload, "\"led_alt\":0"))
-        g_led_alt_mode = 0;
 }
 
 void mqtt_task(void *pvParameters)
